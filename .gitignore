@@ -1,0 +1,13 @@
+node_modules/
+dist/
+data/
+video/generated/
+video/output/
+video/audio/
+video/raw/
+video/build/
+video/demo.mp4
+test-results/
+playwright-report/
+_context/
+*.log
