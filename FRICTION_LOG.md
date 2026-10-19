@@ -1,5 +1,5 @@
 # BorrowMesh friction log
 
-No reportable tool, MCP SDK, transport, elicitation, browser-bundling, or hackathon-material friction has been observed and recorded yet. This statement does not claim that unrun recording or external-assistant paths work.
+This log is for friction with the tools and guidance this project depends on (the MCP TypeScript SDK and specification, the hackathon's Alexa+ track material, and the AWS development tools used during the hackathon). Each entry records the task, steps, expected and actual results, severity, workaround, and an actionable suggestion.
 
-Only actual issues encountered while building with this project's tools belong here. Add each observed entry with: task, reproduction steps, expected result, actual result, severity, workaround, and actionable suggestion. Do not add environmental sandbox limitations or speculative issues.
+No such friction has been observed while building BorrowMesh so far. Problems in this project's own code or video tooling are described in the project story instead, not here.

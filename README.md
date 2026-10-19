@@ -2,9 +2,9 @@
 
 BorrowMesh reserves a complete, compatible working set from a fictional neighborhood tool library: the tools, their supporting parts, and a workshop bench slot in one booking.
 
-Borrowing one tool is easy. Borrowing a set that works together is harder. A missing battery or an unavailable bench can make an otherwise useful reservation fail. BorrowMesh treats the whole project as the unit of planning, holding, booking, repair, and cancellation. Its intended use is a household asking its assistant once for a weekend project, rather than checking every tool separately. Any money or waste savings are potential benefits, not measured outcomes.
+Borrowing one tool is easy. Borrowing a set that works together is harder. A missing battery or an unavailable bench can make an otherwise useful reservation fail. BorrowMesh treats the whole project as the unit of planning, holding, booking, repair, and cancellation. The demo supports planter-box and shelf-repair requests, then coordinates all resources for the selected project. Any money or waste savings are potential benefits, not measured outcomes.
 
-The project includes a self-hosted Model Context Protocol (MCP) server and a **simulated Alexa+-style web experience**. The browser is a real MCP client, not a mock tool-call display. There is no real Alexa integration, Amazon account connection, or cloud dependency. All library data is fictional.
+The project includes a self-hosted Model Context Protocol (MCP) server and a **simulated Alexa+-style web experience, not affiliated with Amazon**. The browser is a real MCP client, not a mock tool-call display. There is no real Alexa integration, Amazon account connection, or cloud dependency. All library data is fictional.
 
 ## Run locally
 
@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-Open **http://127.0.0.1:5174**. The MCP endpoint is **http://127.0.0.1:3002/mcp**. Both bind to `127.0.0.1`. No account, API key, paid API, or device is needed. Leave these ports free; the web server fails instead of silently changing its port.
+Open **http://127.0.0.1:5174**. The MCP endpoint is **http://127.0.0.1:3002/mcp**. Both bind to `127.0.0.1`. No account, API key, paid API, or device is needed. **Ports 3002 and 5174 must be free**; the web server fails instead of silently changing its port.
 
 ```sh
 npm run build       # TypeScript checks and Vite production bundle
@@ -37,7 +37,7 @@ The default state file is `data/library.json`, excluded from source control. Wri
 
 The workbench places conversation and suggested utterances on the left, with item tiles and a bench timeline on the right. Bundle cards compare complete options horizontally. Browser speech synthesis can read English responses; text input and chips remain available. Microphone input uses `SpeechRecognition` only when the browser supports it. The separate deterministic intent router has no language-model dependency.
 
-The collapsible Protocol inspector displays the actual JSON-RPC requests and responses, including initialization, tool discovery, tool calls, and consent elicitation. The SDK negotiates MCP protocol version **2025-11-25** with a current client. Compatibility behavior for older client versions is tested separately.
+The collapsible Protocol inspector displays the actual JSON-RPC requests and responses, including initialization, tool discovery, tool calls, and consent elicitation. The SDK negotiates MCP protocol version **2025-11-25** with the bundled browser client. Compatibility behavior for older client versions is tested separately.
 
 ## Canonical demo
 
@@ -93,7 +93,9 @@ A remote or cloud assistant generally cannot reach your machine's loopback addre
 
 ## Prepare a demo video
 
-The tooling is prepared for a recording-capable macOS machine. **No audio, browser recording, final MP4, or public video has been created by this implementation pass.** Non-browser preparation checks do not prove the recorded flow or the actual final duration.
+The completed demo is **147.0 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](TODO_VIDEO_URL). The public video URL is pending.
+
+The verified browser walkthrough completed requirements, three kit cards, hold, consent, booking, reload, clamp replacement, cancellation with waitlist service, and protocol inspection, with zero browser console errors. A separate fresh-copy installation passed the build, 73 tests with three todo cases, and demo reset. The following commands check recording preparation; they do not repeat that browser verification:
 
 ```sh
 npm run video:check
@@ -101,14 +103,14 @@ npm run video:synth -- --check
 npm run video:build -- --check
 ```
 
-These validate the new English storyboard without launching Chromium, invoking macOS `say`, or requiring generated media. The narration planning estimate targets **140–165 seconds**, allowing 15 seconds for interaction; it is not a measured recording length. The check prints separate narrator and assistant word counts and requires short assistant replies for the seven spoken response segments.
+These validate the English storyboard without launching Chromium, invoking macOS `say`, or requiring generated media. The narration planning estimate targets **140–165 seconds**, allowing 15 seconds for interaction; the measured completed video is **147.0 seconds**. The check prints separate narrator and assistant word counts and requires short assistant replies for the seven spoken response segments.
 
-On a recording-capable machine, with the app's ports free:
+To reproduce the recording on macOS, first stop any running BorrowMesh development services. **Ports 3002 and 5174 must be free** because the recorder starts its own services:
 
 ```sh
 # Install ffmpeg/ffprobe and suitable macOS voices beforehand.
 # Install the Playwright Chromium build into this project:
-PLAYWRIGHT_BROWSERS_PATH="$PWD/data/browser-cache" npx playwright install chromium
+PLAYWRIGHT_BROWSERS_PATH=./data/browser-cache npx playwright install chromium
 npm run video:synth
 npm run video:record
 npm run video:build -- --validate
@@ -119,13 +121,13 @@ Narrator defaults to **Tom (Enhanced)**; assistant defaults to **Ava (Premium)**
 
 The recorder starts its own server on 3002, Vite on 5174, and isolated fictional state inside `video/raw/`; busy ports fail. It drives the real UI through requirements, comparison, hold, consent, booking, reload, clamp repair, release, and Protocol inspector at 1280×800. It records encoded timing markers to align narration to actual screen states. Browser speech stays off to prevent duplicate audio. Recording verifies a browser reload; separate integration tests cover a server process restart.
 
-The builder checks matching media manifests, timing, dimensions, and codecs. It adds original title/end cards and produces `video/demo.mp4` using H.264/AAC. It rejects a predicted final duration outside the 140–165 second target or a measured output reaching **180 seconds**. Actual pacing and visual quality still require a successful recording on that machine. Uploading a public English video under three minutes and submitting the project remain human actions.
+The builder checks matching media manifests, timing, dimensions, and codecs. It adds original title/end cards and produces `video/demo.mp4` using H.264/AAC. It rejects a predicted final duration outside the 140–165 second target or a measured output reaching **180 seconds**. Reproducing the video requires the full synthesis, recording, and assembly sequence above. Uploading a public English video under three minutes and submitting the project remain human actions.
 
 ## Alexa+ track scope
 
-The supplied hackathon material asks for a self-hosted MCP server using spec 2025-11-25 or later over Streamable HTTP, or an Agent Skill, and permits a simulated Alexa+ experience. BorrowMesh implements that MCP path and includes a simulation that actually calls the server. It includes source, local setup instructions, and an MIT license. The supplied public material is preserved in [`_context/hackathon_public_material.md`](_context/hackathon_public_material.md); no claim is made that hosting, publication, submission, eligibility review, or judging has occurred.
+The supplied hackathon guidance asks for a self-hosted MCP server using spec 2025-11-25 or later over Streamable HTTP, or an Agent Skill, and permits a simulated Alexa+ experience. BorrowMesh implements that MCP path and includes a simulation that actually calls the server. It includes source, local setup instructions, and an MIT license. Repository: [BorrowMesh on GitHub](https://github.com/Driedsandwich/borrowmesh). No hosting, submission, eligibility approval, or judging result is claimed.
 
-BorrowMesh has a different problem, state model, tool semantics, interface, and narration from the read-only RoomLilt reference. Reuse is limited to infrastructure patterns: MCP transport/client wiring, protocol inspection, testing approach, and local video tooling. Sponsor review determines whether separate submissions are substantially different.
+BorrowMesh is a new project built on October 20, 2026 (JST), during the submission period, by a solo entrant using AI coding agents. One agent implemented written specifications; a second reviewed the code, exercised the browser, recorded the video, and verified the results.
 
 ## Limits and feedback
 

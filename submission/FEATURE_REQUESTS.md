@@ -1,0 +1,27 @@
+# Feature requests
+
+These are requests grounded in BorrowMesh's implementation, not reports of missing protocol guarantees or incidents at a real library.
+
+## 1. Reference workflow for atomic multi-resource booking
+
+**Priority: Important**
+
+**Request:** Add an MCP SDK example that searches a compatible bundle, holds all resources with an expiry, requests consent, revalidates, and either commits everything or releases the hold. Include tests for a resource becoming unavailable and for competing sessions.
+
+**Why it matters:** BorrowMesh coordinates tools, accessories, and a bench inside one serialized server process. Its tests cover conflicts during holds and consent. A reference workflow would help developers implement the same domain guarantees without mistaking a successful tool call for an atomic booking. The application's storage still needs to enforce those guarantees.
+
+## 2. Consent examples that preserve the full booking context
+
+**Priority: Important**
+
+**Request:** Provide an SDK/client example showing the original request, proposed substitution, required accessories, bench slot, return deadline, and hold expiry beside a form-elicitation consent control. Cover decline, cancellation, unsupported clients, and state changes while the form is open.
+
+**Why it matters:** BorrowMesh's corded-drill alternative requires an extension cord and outlet bench. Its browser supplies the surrounding booking UI; the server sends the changed-setup explanation and consent field. A complete example would make it easier to keep the borrower's decision connected to the resources being booked.
+
+## 3. Public Alexa+ simulation starter and submission checklist
+
+**Priority: Nice-to-have**
+
+**Request:** Offer a runnable web starter with Streamable HTTP, protocol 2025-11-25 negotiation, tool cards, form elicitation, and a raw-message inspector. Link it directly from a checklist that distinguishes the simulation route from preview-only tooling.
+
+**Why it matters:** BorrowMesh includes its own browser MCP client, deterministic router, cards, and Protocol inspector. The hackathon FAQ permits this route without preview access. A starter would make that route concrete while leaving project-specific compatibility and booking logic to the entrant. This request does not claim an attempted preview-access failure.
