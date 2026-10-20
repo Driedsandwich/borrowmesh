@@ -93,7 +93,7 @@ A remote or cloud assistant generally cannot reach your machine's loopback addre
 
 ## Prepare a demo video
 
-The completed demo is **147.0 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](TODO_VIDEO_URL). The public video URL is pending.
+The completed demo is **147.0 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](TODO_VIDEO_URL).
 
 The verified browser walkthrough completed requirements, three kit cards, hold, consent, booking, reload, clamp replacement, cancellation with waitlist service, and protocol inspection, with zero browser console errors. A separate fresh-copy installation passed the build, 73 tests with three todo cases, and demo reset. The following commands check recording preparation; they do not repeat that browser verification:
 
@@ -121,7 +121,7 @@ Narrator defaults to **Tom (Enhanced)**; assistant defaults to **Ava (Premium)**
 
 The recorder starts its own server on 3002, Vite on 5174, and isolated fictional state inside `video/raw/`; busy ports fail. It drives the real UI through requirements, comparison, hold, consent, booking, reload, clamp repair, release, and Protocol inspector at 1280×800. It records encoded timing markers to align narration to actual screen states. Browser speech stays off to prevent duplicate audio. Recording verifies a browser reload; separate integration tests cover a server process restart.
 
-The builder checks matching media manifests, timing, dimensions, and codecs. It adds original title/end cards and produces `video/demo.mp4` using H.264/AAC. It rejects a predicted final duration outside the 140–165 second target or a measured output reaching **180 seconds**. Reproducing the video requires the full synthesis, recording, and assembly sequence above. Uploading a public English video under three minutes and submitting the project remain human actions.
+The builder checks matching media manifests, timing, dimensions, and codecs. It adds original title/end cards and produces `video/demo.mp4` using H.264/AAC. It rejects a predicted final duration outside the 140–165 second target or a measured output reaching **180 seconds**. Reproducing the video requires the full synthesis, recording, and assembly sequence above.
 
 ## Alexa+ track scope
 

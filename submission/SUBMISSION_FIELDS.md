@@ -24,7 +24,7 @@ The fictional scenario is specific. Priya wants to build a planter box on Saturd
 
 ## What it does
 
-BorrowMesh is a **simulated Alexa+-style experience, not affiliated with Amazon, with fictional data**. Its web workbench pairs conversation and suggested requests with item tiles, complete-kit cards, and a bench timeline. The browser makes real calls to the local server.
+BorrowMesh is a **simulated Alexa+-style experience, not affiliated with Amazon, with fictional data**. Its web workbench pairs conversation and suggested requests with item tiles, complete-kit cards, and a bench timeline. The browser makes real calls to the local server. Requests can be typed, picked from suggestions, or spoken where the browser supports speech recognition, and replies can be read aloud with the browser's speech synthesis.
 
 Priya can compare three complete options: “Plug-in kit · standard clamps,” “Battery kit · platform B · standard clamps,” and “Plug-in kit · wide-jaw clamps.” Cards explain substitutions, bench times, and return deadlines. Choosing the plug-in kit holds its tools, extension cord, and bench together. After explicit consent to the changed setup, the booking includes seven catalog items, including a two-clamp pair, and the 14:00–16:30 bench slot.
 
@@ -56,7 +56,7 @@ This implementation demonstrates why complete-kit availability must be checked a
 
 ## Potential impact
 
-For a community tool library, complete-kit planning could help borrowers avoid incomplete reservations and help staff coordinate accessories and workspace. Releasing a whole booking could make a usable set available to the next borrower. These are potential benefits; there are no measured savings or real-user results.
+For a community tool library, complete-kit planning could help borrowers avoid incomplete reservations and help staff coordinate accessories and workspace. Releasing a whole booking could make a usable set available to the next borrower. In the canonical scenario, the preferred cordless drill is out on loan; searching for a drill alone would not tell Priya that the corded alternative also needs an extension cord and an outlet bench, while BorrowMesh returns only kits that are complete for her time window. These are potential benefits; there are no measured savings or real-user results.
 
 ## Scope and limitations
 
@@ -116,7 +116,7 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 
 - **Use:** Driving and recording the full browser flow at 1280×800, including reload, consent, clamp replacement, release, and protocol inspection.
 - **Worked well:** The verified walkthrough used Playwright 1.64.1 and Chromium build 1248, completed the flow, and recorded zero browser console errors.
-- **Improve:** A recording example that exposes encoded-frame timing for narration alignment would fit this workflow. The timing-check issue described in the friction log belonged to our builder, not Playwright.
+- **Improve:** A recording example that exposes encoded-frame timing for narration alignment would fit this workflow. The timing-check issue described in the project story belonged to our own video builder, not Playwright.
 - **Onboarding:** Chromium needs a separate installation. The recording instructions specify `PLAYWRIGHT_BROWSERS_PATH=./data/browser-cache npx playwright install chromium`; ports 3002 and 5174 must be free.
 - **Use again:** Yes, for repeatable UI checks and a demonstration recorded from actual interactions.
 
@@ -214,6 +214,6 @@ These are requests grounded in BorrowMesh's implementation, not reports of missi
 
 # BorrowMesh friction log
 
-This log is for friction with the tools and guidance this project depends on (the MCP TypeScript SDK and specification, the hackathon's Alexa+ track material, and the AWS development tools used during the hackathon). Each entry records the task, steps, expected and actual results, severity, workaround, and an actionable suggestion.
+This log is for friction with the tools and guidance this project depends on (the MCP TypeScript SDK and specification, and the hackathon's Alexa+ track material). Each entry records the task, steps, expected and actual results, severity, workaround, and an actionable suggestion.
 
 No such friction has been observed while building BorrowMesh so far. Problems in this project's own code or video tooling are described in the project story instead, not here.

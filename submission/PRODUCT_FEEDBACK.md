@@ -46,7 +46,7 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 
 - **Use:** Driving and recording the full browser flow at 1280×800, including reload, consent, clamp replacement, release, and protocol inspection.
 - **Worked well:** The verified walkthrough used Playwright 1.64.1 and Chromium build 1248, completed the flow, and recorded zero browser console errors.
-- **Improve:** A recording example that exposes encoded-frame timing for narration alignment would fit this workflow. The timing-check issue described in the friction log belonged to our builder, not Playwright.
+- **Improve:** A recording example that exposes encoded-frame timing for narration alignment would fit this workflow. The timing-check issue described in the project story belonged to our own video builder, not Playwright.
 - **Onboarding:** Chromium needs a separate installation. The recording instructions specify `PLAYWRIGHT_BROWSERS_PATH=./data/browser-cache npx playwright install chromium`; ports 3002 and 5174 must be free.
 - **Use again:** Yes, for repeatable UI checks and a demonstration recorded from actual interactions.
 

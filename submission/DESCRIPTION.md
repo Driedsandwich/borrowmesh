@@ -8,7 +8,7 @@ The fictional scenario is specific. Priya wants to build a planter box on Saturd
 
 ## What it does
 
-BorrowMesh is a **simulated Alexa+-style experience, not affiliated with Amazon, with fictional data**. Its web workbench pairs conversation and suggested requests with item tiles, complete-kit cards, and a bench timeline. The browser makes real calls to the local server.
+BorrowMesh is a **simulated Alexa+-style experience, not affiliated with Amazon, with fictional data**. Its web workbench pairs conversation and suggested requests with item tiles, complete-kit cards, and a bench timeline. The browser makes real calls to the local server. Requests can be typed, picked from suggestions, or spoken where the browser supports speech recognition, and replies can be read aloud with the browser's speech synthesis.
 
 Priya can compare three complete options: “Plug-in kit · standard clamps,” “Battery kit · platform B · standard clamps,” and “Plug-in kit · wide-jaw clamps.” Cards explain substitutions, bench times, and return deadlines. Choosing the plug-in kit holds its tools, extension cord, and bench together. After explicit consent to the changed setup, the booking includes seven catalog items, including a two-clamp pair, and the 14:00–16:30 bench slot.
 
@@ -40,7 +40,7 @@ This implementation demonstrates why complete-kit availability must be checked a
 
 ## Potential impact
 
-For a community tool library, complete-kit planning could help borrowers avoid incomplete reservations and help staff coordinate accessories and workspace. Releasing a whole booking could make a usable set available to the next borrower. These are potential benefits; there are no measured savings or real-user results.
+For a community tool library, complete-kit planning could help borrowers avoid incomplete reservations and help staff coordinate accessories and workspace. Releasing a whole booking could make a usable set available to the next borrower. In the canonical scenario, the preferred cordless drill is out on loan; searching for a drill alone would not tell Priya that the corded alternative also needs an extension cord and an outlet bench, while BorrowMesh returns only kits that are complete for her time window. These are potential benefits; there are no measured savings or real-user results.
 
 ## Scope and limitations
 
