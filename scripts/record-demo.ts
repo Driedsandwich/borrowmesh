@@ -9,7 +9,7 @@ process.chdir(root);
 if (process.argv.slice(2).some(arg => arg !== '--check')) throw new Error('Usage: npm run video:record -- [--check]');
 const narration = validateStoryboard();
 // A fresh checkout can validate preparation without synthesized media, a browser,
-// a server, or macOS speech synthesis. This is not a recording verification.
+// a server, or speech synthesis. This is not a recording verification.
 if (process.argv.includes('--check')) {
   console.log('Recorder preparation check passed: canonical storyboard; ports 3002/5174; 1280x800. No browser launched.');
 } else {

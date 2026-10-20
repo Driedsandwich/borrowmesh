@@ -32,7 +32,7 @@ During video assembly, our timing check rejected a segment by 51 ms. Encoded-fra
 
 ## Accomplishments that we're proud of
 
-The real-browser walkthrough completed search, hold, consent, booking, reload, clamp replacement, cancellation, and waitlist service with zero browser console errors. A fresh-copy installation passed the build and tests: 73 passed, with three check-in cases left as todo. The recorded demonstration is 147.0 seconds long.
+The real-browser walkthrough completed search, hold, consent, booking, reload, clamp replacement, cancellation, and waitlist service with zero browser console errors. A fresh-copy installation passed the build and tests: 73 passed, with three check-in cases left as todo. The recorded demonstration is 157.2 seconds long.
 
 ## What we learned
 

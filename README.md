@@ -93,7 +93,7 @@ A remote or cloud assistant generally cannot reach your machine's loopback addre
 
 ## Prepare a demo video
 
-The completed demo is **147.0 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](TODO_VIDEO_URL).
+The completed demo is **157.2 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](TODO_VIDEO_URL).
 
 The verified browser walkthrough completed requirements, three kit cards, hold, consent, booking, reload, clamp replacement, cancellation with waitlist service, and protocol inspection, with zero browser console errors. A separate fresh-copy installation passed the build, 73 tests with three todo cases, and demo reset. The following commands check recording preparation; they do not repeat that browser verification:
 
@@ -103,12 +103,12 @@ npm run video:synth -- --check
 npm run video:build -- --check
 ```
 
-These validate the English storyboard without launching Chromium, invoking macOS `say`, or requiring generated media. The narration planning estimate targets **140–165 seconds**, allowing 15 seconds for interaction; the measured completed video is **147.0 seconds**. The check prints separate narrator and assistant word counts and requires short assistant replies for the seven spoken response segments.
+These validate the English storyboard without launching Chromium, invoking Kokoro, or requiring generated media. The narration planning estimate targets **140–165 seconds**, allowing 15 seconds for interaction; the measured completed video is **157.2 seconds**. The check prints separate narrator and assistant word counts and requires short assistant replies for the seven spoken response segments.
 
 To reproduce the recording on macOS, first stop any running BorrowMesh development services. **Ports 3002 and 5174 must be free** because the recorder starts its own services:
 
 ```sh
-# Install ffmpeg/ffprobe and suitable macOS voices beforehand.
+# Install ffmpeg/ffprobe and the Kokoro speech files beforehand (see below).
 # Install the Playwright Chromium build into this project:
 PLAYWRIGHT_BROWSERS_PATH=./data/browser-cache npx playwright install chromium
 npm run video:synth
@@ -117,7 +117,7 @@ npm run video:build -- --validate
 npm run video:build
 ```
 
-Narrator defaults to **Tom (Enhanced)**; assistant defaults to **Ava (Premium)** with **Samantha** fallback. Override with `NARRATOR_MAC_VOICE`, `ASSISTANT_MAC_VOICE`, and `FALLBACK_MAC_VOICE`. Missing narrator voices fail with setup guidance. The synthesizer measures duration and normalizes local clips. It writes `video/audio/timeline.json` only after successful synthesis.
+Speech is synthesized locally with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0 model weights) through [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx) (MIT). macOS system voices are not used because their license limits them to personal, non-commercial use. Install `kokoro-onnx` and `soundfile` into a Python environment (kokoro-onnx brings its own phonemizer dependencies, including espeak-ng under GPL-3.0; they are used only while synthesizing and are not part of this repository). Download `kokoro-v1.0.fp16.onnx` and `voices-v1.0.bin` (about 205 MB together) from the kokoro-onnx `model-files-v1.0` release into `data/tts/`, or point `KOKORO_MODEL` and `KOKORO_VOICES` at them; `KOKORO_PYTHON` selects the Python interpreter. The narrator defaults to `am_michael` and the assistant to `af_heart` (`KOKORO_NARRATOR_VOICE`, `KOKORO_ASSISTANT_VOICE`) at speed 1.1 (`KOKORO_SPEED`). Missing model files fail with setup guidance. The synthesizer measures duration and normalizes local clips. It writes `video/audio/timeline.json` only after successful synthesis.
 
 The recorder starts its own server on 3002, Vite on 5174, and isolated fictional state inside `video/raw/`; busy ports fail. It drives the real UI through requirements, comparison, hold, consent, booking, reload, clamp repair, release, and Protocol inspector at 1280×800. It records encoded timing markers to align narration to actual screen states. Browser speech stays off to prevent duplicate audio. Recording verifies a browser reload; separate integration tests cover a server process restart.
 

@@ -53,18 +53,18 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 ## ffmpeg and ffprobe
 
 - **Use:** Measuring media, normalizing speech clips, assembling original title and closing cards, and encoding H.264/AAC output.
-- **Worked well:** The finished video is 147.0 seconds at 1280×800. The verified audio measurements are mean −18.1 dB and peak −2.0 dB.
+- **Worked well:** The finished video is 157.2 seconds at 1280×800. The verified audio measurements are mean −19.0 dB and peak −1.9 dB.
 - **Improve:** Our builder's timing tolerance needed to account for encoded-frame resolution. No ffmpeg or ffprobe failure was recorded.
 - **Onboarding:** Both executables must be installed before media generation. The scripts check their availability and validate media manifests and output.
 - **Use again:** Yes, for local, scripted video assembly and measurement.
 
-## macOS speech synthesis
+## Kokoro text-to-speech (kokoro-onnx)
 
-- **Use:** Generating narration with Tom (Enhanced) and assistant responses with Ava (Premium), across 18 clips in 11 segments.
-- **Worked well:** The completed video contains both locally synthesized voices. The scripts measure clip duration and normalize the audio.
-- **Improve:** A portable voice setup would make reproduction on other operating systems easier. That is a limitation of our current workflow, not an observed speech-engine error.
-- **Onboarding:** Suitable voices must be installed. The scripts check voices, provide setup guidance, and define Samantha as an assistant fallback; this does not claim that fallback was used.
-- **Use again:** Yes, for a local macOS demonstration with measured clips.
+- **Use:** Generating narration (voice `am_michael`) and assistant responses (voice `af_heart`) locally, across 18 clips in 11 segments. We chose it because its model weights are Apache-2.0 licensed; macOS system voices are licensed for personal, non-commercial use only.
+- **Worked well:** One Python process loads the model once and writes every clip; our scripts measure each clip and normalize the audio. No network service, account, or API key is needed.
+- **Improve:** At the default speed the raw recording was 164.8 seconds, so the finished video would have exceeded our 140–165 second target; we set speed 1.1. A documented speaking-rate figure for each voice would make narration planning easier.
+- **Onboarding:** Install `kokoro-onnx` and `soundfile` into a Python environment and download two model files (about 205 MB) from the kokoro-onnx release page.
+- **Use again:** Yes, for local narration that can be published.
 
 ## Node.js, npm, TypeScript, and tsx
 
