@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type { Booking, Bundle, CatalogItem, CheckInRequest, Clock, CommitResult, FindResult, HoldResult, IssueResult, KitRequest, LibraryState, ReleaseResult, Substitution } from '../shared/types.js';
+import type { Booking, Bundle, CatalogItem, CheckInIssue, CheckInResult, Clock, CommitResult, FindResult, HoldResult, IssueResult, KitRequest, LibraryState, ReleaseResult, Substitution } from '../shared/types.js';
 export type * from '../shared/types.js';
 
 export const DEMO_DATE = '2026-10-24';
@@ -205,7 +205,103 @@ export function reportIssue(input: LibraryState, bookingId: string, itemId: stri
   return { state, ok: true, message: `I swapped your ${itemNameInSentence(affected.name)} for the ${itemNameInSentence(replacement.name)}. Every other item and the bench stay booked.`, booking, replacement: clone(replacement), affectedItemId: itemId, keptItemIds };
 }
 
-export function check_in_bundle(_state: LibraryState, _request: CheckInRequest): never { throw new Error('check_in_bundle not implemented'); }
+export function check_in_bundle(input: LibraryState, request: { bookingId: string; returnedItemIds: string[]; issues?: CheckInIssue[] }): CheckInResult {
+  // 1. Clone state
+  let state = expireHolds(input);
+  const booking = state.bookings.find(value => value.id === request.bookingId);
+
+  // 2. Find booking; must be status 'booked'
+  if (!booking || booking.status !== 'booked') {
+    return { state: clone(input), ok: false, message: booking ? `Booking ${request.bookingId} is not active (status: ${booking.status}).` : `No booking with ID ${request.bookingId} was found.`, waitlistServed: [] };
+  }
+
+  const issues = request.issues ?? [];
+
+  // 3. Check all items are accounted for (returned or in issues)
+  const accountedIds = new Set([...request.returnedItemIds, ...issues.map(i => i.itemId)]);
+  const unaccountedIds = booking.bundle.itemIds.filter(id => !accountedIds.has(id));
+  if (unaccountedIds.length) {
+    const names = unaccountedIds.map(id => {
+      const catalogItem = input.catalog.find(value => value.id === id);
+      return catalogItem ? itemNameInSentence(catalogItem.name) : id;
+    });
+    return { state: clone(input), ok: false, message: `These items were not accounted for: ${names.join(', ')}.`, waitlistServed: [] };
+  }
+
+  // 4. Returned items → condition 'ready'
+  for (const id of request.returnedItemIds) {
+    const catalogItem = state.catalog.find(value => value.id === id);
+    if (catalogItem) catalogItem.condition = 'ready';
+  }
+
+  // 5 & 6. Process issues: damaged → 'broken', missing → unchanged (already unavailable)
+  for (const issue of issues) {
+    if (issue.kind === 'damaged') {
+      const catalogItem = state.catalog.find(value => value.id === issue.itemId);
+      if (catalogItem) catalogItem.condition = 'broken';
+    }
+    // 'missing': leave condition unchanged, just flag it in booking.issues below
+  }
+
+  // 7. Free bench time if returning before bench end time
+  const benchEndStamp = stamp(booking.bundle.bench.date, booking.bundle.bench.end);
+  if (state.simulatedNow < benchEndStamp) {
+    state.benchReservations = state.benchReservations.filter(slot =>
+      !(slot.date === booking.bundle.bench.date &&
+        slot.start === booking.bundle.bench.start &&
+        slot.end === booking.bundle.bench.end &&
+        slot.borrowerId === booking.borrowerId)
+    );
+  }
+
+  // 8. Mark booking returned, record issues
+  booking.status = 'returned';
+  booking.issues = issues.map(i => ({ itemId: i.itemId, kind: i.kind }));
+
+  // 9. Serve waitlist (same pattern as releaseBundle)
+  const waitlistServed: Booking[] = [];
+  const priorBorrower = state.currentBorrowerId;
+  for (const entry of state.waitlist.filter(value => value.status === 'waiting')) {
+    state.currentBorrowerId = entry.borrowerId;
+    const search = findCompatibleKits(state, entry.request); state = search.state;
+    const bundle = search.bundles.find(value => !value.requiresConsent || entry.acceptsSubstitutions);
+    if (bundle) {
+      const held = holdResources(state, bundle.id); state = held.state;
+      if (held.hold) {
+        const committed = commitBundle(state, held.hold.id, entry.acceptsSubstitutions); state = committed.state;
+        if (committed.booking) {
+          const updatedEntry = state.waitlist.find(value => value.id === entry.id)!;
+          updatedEntry.status = 'served';
+          updatedEntry.bookingId = committed.booking.id;
+          waitlistServed.push(committed.booking);
+        }
+      }
+    }
+  }
+  state.currentBorrowerId = priorBorrower;
+
+  // 10. Build plain-English message
+  const returnedNames = request.returnedItemIds.map(id => {
+    const catalogItem = state.catalog.find(value => value.id === id) ?? input.catalog.find(value => value.id === id);
+    return catalogItem ? itemNameInSentence(catalogItem.name) : id;
+  });
+  const issueParts = issues.map(issue => {
+    const catalogItem = state.catalog.find(value => value.id === issue.itemId) ?? input.catalog.find(value => value.id === issue.itemId);
+    const name = catalogItem ? itemNameInSentence(catalogItem.name) : issue.itemId;
+    return `${name} (${issue.kind})`;
+  });
+  const itemsPart = [...returnedNames, ...issueParts].join(', ');
+  const waitlistMessage = waitlistServed.length
+    ? ' ' + waitlistServed.map(value => `${state.borrowers.find(b => b.id === value.borrowerId)?.name ?? 'A borrower'}, on the waitlist, now has a complete booking.`).join(' ')
+    : '';
+  return {
+    state,
+    ok: true,
+    message: `Checked in: ${itemsPart}. The bench slot has been freed.${waitlistMessage}`,
+    booking: state.bookings.find(value => value.id === request.bookingId),
+    waitlistServed,
+  };
+}
 
 export class LibraryStore {
   private state = createInitialState(); private clock: Clock; private customClock: boolean;
