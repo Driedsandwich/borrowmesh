@@ -39,7 +39,7 @@ No friction with the MCP SDK, the specification, or the track material was obser
 - **Task:** The first CLI run.
 - **Steps:** Read the run log after the run ended.
 - **Expected:** A failed self-review or a throttled model call is visible in the run summary.
-- **Actual:** Self-review raised `ValueError: BoundedSemaphore released too many times`, and later "Self-review could not verify the step: the review itself failed". Two steps hit "Bedrock is throttling requests" and were retried. These appeared only in the log.
+- **Actual:** Self-review raised `ValueError: BoundedSemaphore released too many times`, and later "Self-review could not verify the step: the review itself failed". Model calls hit "Bedrock is throttling requests" twice and were retried. These appeared only in the log.
 - **Severity:** Low.
 - **Workaround:** Reviewed the diff and ran the tests ourselves.
 - **Suggestion:** Show unverified steps and throttling retries, with their credit use, in the run summary.

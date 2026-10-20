@@ -9,7 +9,7 @@
 | Built with | TypeScript; Node.js; npm; MCP TypeScript SDK 1.32.1; MCP specification 2025-11-25; Streamable HTTP; Express; Zod; Vite; Vitest; happy-dom; Playwright; Chromium; tsx; concurrently; ffmpeg; ffprobe; Kokoro (kokoro-onnx); Python; Kiro Crew; Kiro CLI; HTML; CSS |
 | Try it out | https://github.com/Driedsandwich/borrowmesh |
 | Video demo link | TODO_VIDEO_URL |
-| Team / development disclosure | Solo entrant; built during the submission period with AI coding agents. One agent implemented written specifications; a second reviewed the code, ran the browser walkthrough, recorded the video, and verified results. A Kiro Crew task-runner run implemented the check-in domain function, which was reviewed and corrected before merging. |
+| Team / development disclosure | Solo entrant; built during the submission period with AI coding agents. One agent implemented written specifications; a second reviewed the code, ran the browser walkthrough, recorded the video, and verified results. A Kiro Crew task-runner run implemented the check-in domain function, which was then reviewed and corrected in a follow-up commit. |
 | Existing-project explanation | New project, built on October 20, 2026 (JST), during the hackathon submission period. |
 
 ## Project story
@@ -40,7 +40,7 @@ Search deterministically checks drill and battery compatibility, required bits, 
 
 Holds expire after ten simulated minutes. MCP form elicitation requests explicit consent when a setup change requires it. After consent, the server revalidates every resource. Mutations run serially within one server process; atomic commit saves the whole booking or books nothing. A conflict cancels the hold and returns fresh alternatives. Declining consent releases the hold. Full cancellation uses `release_bundle` to roll back the reservation by releasing all booked resources together.
 
-JSON persistence writes a temporary file and renames it atomically. The deterministic intent router maps supported requests to actions without a language model. The Protocol inspector shows actual JSON-RPC messages, including initialization, tool discovery, calls, and elicitation. Vite builds the browser app; Vitest covers domain behavior, client flow, HTTP integration, and process restart. Playwright records the working browser flow; local speech synthesis and ffmpeg produce the video. During the hackathon, a Kiro Crew task-runner run implemented the check-in domain function and its tests from a written spec; we reviewed its commits and fixed three defects before merging.
+JSON persistence writes a temporary file and renames it atomically. The deterministic intent router maps supported requests to actions without a language model. The Protocol inspector shows actual JSON-RPC messages, including initialization, tool discovery, calls, and elicitation. Vite builds the browser app; Vitest covers domain behavior, client flow, HTTP integration, and process restart. Playwright records the working browser flow; local speech synthesis and ffmpeg produce the video. During the hackathon, a Kiro Crew task-runner run implemented the check-in domain function and its tests from a written spec; we brought its commits into the repository, reviewed them, and fixed three defects in a follow-up commit.
 
 ## Challenges we ran into
 
@@ -132,7 +132,7 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 
 ## Kokoro text-to-speech (kokoro-onnx)
 
-- **Use:** Generating narration (voice `am_michael`) and assistant responses (voice `af_heart`) locally, across 18 clips in 11 segments. We chose it because its model weights are Apache-2.0 licensed; macOS system voices are licensed for personal, non-commercial use only.
+- **Use:** Generating narration (voice `am_michael`) and assistant responses (voice `af_heart`) locally, across 18 clips in 11 segments, with `soundfile` writing the clips. We chose it because its model weights are Apache-2.0 licensed; macOS system voices are licensed for personal, non-commercial use only.
 - **Worked well:** One Python process loads the model once and writes every clip; our scripts measure each clip and normalize the audio. No network service, account, or API key is needed.
 - **Improve:** At the default speed the raw recording was 164.8 seconds, so the finished video would have exceeded our 140–165 second target; we set speed 1.1. A documented speaking-rate figure for each voice would make narration planning easier.
 - **Onboarding:** Install `kokoro-onnx` and `soundfile` into a Python environment and download two model files (about 205 MB) from the kokoro-onnx release page.
@@ -181,7 +181,7 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 ## Kiro Crew (AWS Builder)
 
 - **Use:** We used Kiro Crew 0.9.0 with Kiro CLI 2.32.0 on the Kiro Free plan as a development tool during the hackathon. A task-runner run, given a written spec, implemented the `check_in_bundle` domain function and replaced the three planned `todo` tests with five real tests (commits 9740315, 05e5777 and ad75c78). No AWS service is called at runtime; this follows the rule that building with Kiro Crew qualifies on its own.
-- **Worked well:** Started from the dashboard's Task Runner with "auto-approve tool calls" for that run, it planned the work, edited three files in a separate git worktree, committed its steps, and the suite passed. The code followed the existing pure-function style of the domain layer. The run took about 13 minutes and used 15.39 credits.
+- **Worked well:** Started from the dashboard's Task Runner with "auto-approve tool calls" for that run, it planned the work, edited three files in a separate git worktree, committed its steps, and the suite passed. The run took about 13 minutes and used 15.39 credits.
 - **Improve:** Two earlier runs started with `kirocrew run` changed no code: the first worked in an empty per-run folder and was refused file writes and shell commands; the second reported "Task completed" although its step commits only touched `.kiro/settings`. Those two runs used 24.79 of the 50 free monthly credits. Our review of the successful run found three defects (missing items became available again, the message always said the bench was freed, and item IDs outside the booking were accepted), fixed in a follow-up commit. The friction log has the details.
 - **Onboarding:** The CLI installer copied an app to `/Applications`, and a login launcher was added. Sign-in was a browser flow with GitHub. Telemetry and content sharing could be switched off with `kiro-cli settings`. The dashboard needed a sign-in URL from `kirocrew token`, and its first-run dialog offered to import other agents' setups, which we skipped.
 - **Use again:** Yes, for well-scoped tasks started from the dashboard with a per-run approval, after reading the diff and running the tests ourselves.
@@ -267,7 +267,7 @@ No friction with the MCP SDK, the specification, or the track material was obser
 - **Task:** The first CLI run.
 - **Steps:** Read the run log after the run ended.
 - **Expected:** A failed self-review or a throttled model call is visible in the run summary.
-- **Actual:** Self-review raised `ValueError: BoundedSemaphore released too many times`, and later "Self-review could not verify the step: the review itself failed". Two steps hit "Bedrock is throttling requests" and were retried. These appeared only in the log.
+- **Actual:** Self-review raised `ValueError: BoundedSemaphore released too many times`, and later "Self-review could not verify the step: the review itself failed". Model calls hit "Bedrock is throttling requests" twice and were retried. These appeared only in the log.
 - **Severity:** Low.
 - **Workaround:** Reviewed the diff and ran the tests ourselves.
 - **Suggestion:** Show unverified steps and throttling retries, with their credit use, in the run summary.
