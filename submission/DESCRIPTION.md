@@ -24,7 +24,7 @@ Search deterministically checks drill and battery compatibility, required bits, 
 
 Holds expire after ten simulated minutes. MCP form elicitation requests explicit consent when a setup change requires it. After consent, the server revalidates every resource. Mutations run serially within one server process; atomic commit saves the whole booking or books nothing. A conflict cancels the hold and returns fresh alternatives. Declining consent releases the hold. Full cancellation uses `release_bundle` to roll back the reservation by releasing all booked resources together.
 
-JSON persistence writes a temporary file and renames it atomically. The deterministic intent router maps supported requests to actions without a language model. The Protocol inspector shows actual JSON-RPC messages, including initialization, tool discovery, calls, and elicitation. Vite builds the browser app; Vitest covers domain behavior, client flow, HTTP integration, and process restart. Playwright records the working browser flow; local speech synthesis and ffmpeg produce the video.
+JSON persistence writes a temporary file and renames it atomically. The deterministic intent router maps supported requests to actions without a language model. The Protocol inspector shows actual JSON-RPC messages, including initialization, tool discovery, calls, and elicitation. Vite builds the browser app; Vitest covers domain behavior, client flow, HTTP integration, and process restart. Playwright records the working browser flow; local speech synthesis and ffmpeg produce the video. During the hackathon, a Kiro Crew task-runner run implemented the check-in domain function and its tests from a written spec; we reviewed its commits and fixed three defects before merging.
 
 ## Challenges we ran into
 
@@ -34,7 +34,7 @@ During video assembly, our timing check rejected a segment by 51 ms. Encoded-fra
 
 ## Accomplishments that we're proud of
 
-The real-browser walkthrough completed search, hold, consent, booking, reload, clamp replacement, cancellation, and waitlist service with zero browser console errors. A fresh-copy installation passed the build and tests: 73 passed, with three check-in cases left as todo. The recorded demonstration is 157.2 seconds long.
+The real-browser walkthrough completed search, hold, consent, booking, reload, clamp replacement, cancellation, and waitlist service with zero browser console errors. A fresh-copy installation passed the build and all 92 tests. The recorded demonstration is 157.2 seconds long.
 
 ## What we learned
 
@@ -46,8 +46,8 @@ For a community tool library, complete-kit planning could help borrowers avoid i
 
 ## Scope and limitations
 
-All borrowers, inventory, and reservations are fictional. There is no real Alexa integration, authenticated consent, library connection, payment, notification, or AWS runtime service. No account, API key, or paid API is needed to run the demo. The router supports a small set of requests and two project templates. Scheduling uses fictional times; JSON storage supports one local server process. Physical check-in remains an unregistered throwing stub with todo tests.
+All borrowers, inventory, and reservations are fictional. There is no real Alexa integration, authenticated consent, library connection, payment, notification, or AWS runtime service. No account, API key, or paid API is needed to run the demo. The router supports a small set of requests and two project templates. Scheduling uses fictional times; JSON storage supports one local server process. Physical check-in exists in the domain layer with tests but is not yet exposed as an MCP tool or in the workbench.
 
 ## What's next
 
-Implement physical check-in with missing-part and damage handling. Before a real-library pilot, add authenticated borrowers, production storage, and real inventory integration, then evaluate complete-kit planning with library staff and borrowers.
+Expose check-in, which already handles missing and damaged parts in the domain layer, as an MCP tool and in the workbench. Before a real-library pilot, add authenticated borrowers, production storage, and real inventory integration, then evaluate complete-kit planning with library staff and borrowers.

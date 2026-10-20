@@ -80,7 +80,7 @@ Resources: `borrowmesh://catalog` exposes the catalog and `borrowmesh://bookings
 
 The optional Agent Skill [`skills/tool-library-kits/SKILL.md`](skills/tool-library-kits/SKILL.md) gives an assistant a safe workflow for these tools. It is a local instruction artifact; no third-party assistant installation or integration is claimed.
 
-**Planned: `check_in_bundle`.** Returning a booking, flagging missing or damaged parts, freeing a bench early, and serving the waitlist are reserved for a later pass. The domain contains a typed stub that throws `check_in_bundle not implemented`, with test `todo` cases. It is deliberately not registered as an MCP tool. Cancellation with `release_bundle` is available now; it is not a physical return or inventory inspection.
+**Check-in in the domain layer: `check_in_bundle`.** Returning a booking, flagging missing or damaged parts, freeing a bench early, and serving the waitlist are implemented in `src/domain/library.ts` with tests. This function was built during the hackathon by a Kiro Crew task-runner run from a written spec, then reviewed and corrected (see the commit history). It is not yet registered as an MCP tool or shown in the workbench, so the demo video does not include it. In the UI, cancellation with `release_bundle` is the way to give a set back; it is not a physical return or inventory inspection.
 
 ## Use it from an existing AI assistant
 
@@ -97,7 +97,7 @@ A remote or cloud assistant generally cannot reach your machine's loopback addre
 
 The completed demo is **157.2 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](TODO_VIDEO_URL).
 
-The verified browser walkthrough completed requirements, three kit cards, hold, consent, booking, reload, clamp replacement, cancellation with waitlist service, and protocol inspection, with zero browser console errors. A separate fresh-copy installation passed the build, 73 tests with three todo cases, and demo reset. The following commands check recording preparation; they do not repeat that browser verification:
+The verified browser walkthrough completed requirements, three kit cards, hold, consent, booking, reload, clamp replacement, cancellation with waitlist service, and protocol inspection, with zero browser console errors. A separate fresh-copy installation passed the build, 92 tests, and demo reset. The following commands check recording preparation; they do not repeat that browser verification:
 
 ```sh
 npm run video:check
@@ -138,7 +138,7 @@ BorrowMesh is a new project built on October 20, 2026 (JST), during the submissi
 - Consent represents the demo borrower; it is not authenticated identity or a real-world authorization system.
 - JSON persistence supports this local demo, not multiple independent server processes or a production database.
 - Voice and microphone availability depend on the browser and local operating system. Text and chips always remain available.
-- `check_in_bundle` is planned. No public hosting, real Alexa device integration, account setup, publishing, video upload, or hackathon submission is included.
+- `check_in_bundle` exists in the domain layer only; it is not an MCP tool yet. No public hosting, real Alexa device integration, account setup, publishing, video upload, or hackathon submission is included.
 
 [`FRICTION_LOG.md`](FRICTION_LOG.md) records only observed issues with the project tools and SDK. It does not manufacture feedback or treat unrun paths as successful.
 

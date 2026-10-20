@@ -1,6 +1,6 @@
 # Product feedback
 
-The observations below concern this local, fictional BorrowMesh demo. Proposed improvements are requests, not claims that a tool failed. No AWS service is called at runtime.
+The observations below concern this local, fictional BorrowMesh demo. Proposed improvements are requests, not claims that a tool failed. No AWS service is called at runtime; Kiro Crew was used as a development tool (last section).
 
 ## MCP TypeScript SDK 1.32.1
 
@@ -37,9 +37,9 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 ## Vitest and happy-dom
 
 - **Use:** Vitest runs domain, router, palette, HTTP, and process-restart tests. happy-dom supplies a simulated document environment for client-flow tests.
-- **Worked well:** The verified fresh-copy run passed 73 tests, with three planned check-in tests marked todo. The client tests explicitly use deterministic responses rather than a real browser.
+- **Worked well:** The verified fresh-copy run passed all 92 tests. The client tests explicitly use deterministic responses rather than a real browser.
 - **Improve:** Keep examples clear about which checks need a real browser. BorrowMesh uses Playwright separately; no runner or document-emulation defect was recorded.
-- **Onboarding:** `npm test` runs the configured suite after dependency installation. The three todo cases represent unfinished project work.
+- **Onboarding:** `npm test` runs the configured suite after dependency installation.
 - **Use again:** Yes, alongside real-browser checks rather than treating document emulation as browser verification.
 
 ## Playwright and Chromium
@@ -108,4 +108,8 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 
 ## Kiro Crew (AWS Builder)
 
-TODO_KIRO_FEEDBACK
+- **Use:** We used Kiro Crew 0.9.0 with Kiro CLI 2.32.0 on the Kiro Free plan as a development tool during the hackathon. A task-runner run, given a written spec, implemented the `check_in_bundle` domain function and replaced the three planned `todo` tests with five real tests (commits 9740315, 05e5777 and ad75c78). No AWS service is called at runtime; this follows the rule that building with Kiro Crew qualifies on its own.
+- **Worked well:** Started from the dashboard's Task Runner with "auto-approve tool calls" for that run, it planned the work, edited three files in a separate git worktree, committed its steps, and the suite passed. The code followed the existing pure-function style of the domain layer. The run took about 13 minutes and used 15.39 credits.
+- **Improve:** Two earlier runs started with `kirocrew run` changed no code: the first worked in an empty per-run folder and was refused file writes and shell commands; the second reported "Task completed" although its step commits only touched `.kiro/settings`. Those two runs used 24.79 of the 50 free monthly credits. Our review of the successful run found three defects (missing items became available again, the message always said the bench was freed, and item IDs outside the booking were accepted), fixed in a follow-up commit. The friction log has the details.
+- **Onboarding:** The CLI installer copied an app to `/Applications`, and a login launcher was added. Sign-in was a browser flow with GitHub. Telemetry and content sharing could be switched off with `kiro-cli settings`. The dashboard needed a sign-in URL from `kirocrew token`, and its first-run dialog offered to import other agents' setups, which we skipped.
+- **Use again:** Yes, for well-scoped tasks started from the dashboard with a per-run approval, after reading the diff and running the tests ourselves.

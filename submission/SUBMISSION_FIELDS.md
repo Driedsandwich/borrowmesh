@@ -5,11 +5,11 @@
 | Project name | BorrowMesh |
 | Tagline | Borrow a complete, compatible tool kit and workshop bench in one booking. |
 | Primary track | Alexa+ |
-| Mini challenges | TODO_AWS_BUILDER |
-| Built with | TypeScript; Node.js; npm; MCP TypeScript SDK 1.32.1; MCP specification 2025-11-25; Streamable HTTP; Express; Zod; Vite; Vitest; happy-dom; Playwright; Chromium; tsx; concurrently; ffmpeg; ffprobe; Kokoro (kokoro-onnx); Python; HTML; CSS |
+| Mini challenges | AWS Builder — Kiro Crew used as a development tool during the hackathon (how it was used: Product feedback › Kiro Crew) |
+| Built with | TypeScript; Node.js; npm; MCP TypeScript SDK 1.32.1; MCP specification 2025-11-25; Streamable HTTP; Express; Zod; Vite; Vitest; happy-dom; Playwright; Chromium; tsx; concurrently; ffmpeg; ffprobe; Kokoro (kokoro-onnx); Python; Kiro Crew; Kiro CLI; HTML; CSS |
 | Try it out | https://github.com/Driedsandwich/borrowmesh |
 | Video demo link | TODO_VIDEO_URL |
-| Team / development disclosure | Solo entrant; built during the submission period with AI coding agents. One agent implemented written specifications; a second reviewed the code, ran the browser walkthrough, recorded the video, and verified results. |
+| Team / development disclosure | Solo entrant; built during the submission period with AI coding agents. One agent implemented written specifications; a second reviewed the code, ran the browser walkthrough, recorded the video, and verified results. A Kiro Crew task-runner run implemented the check-in domain function, which was reviewed and corrected before merging. |
 | Existing-project explanation | New project, built on October 20, 2026 (JST), during the hackathon submission period. |
 
 ## Project story
@@ -40,7 +40,7 @@ Search deterministically checks drill and battery compatibility, required bits, 
 
 Holds expire after ten simulated minutes. MCP form elicitation requests explicit consent when a setup change requires it. After consent, the server revalidates every resource. Mutations run serially within one server process; atomic commit saves the whole booking or books nothing. A conflict cancels the hold and returns fresh alternatives. Declining consent releases the hold. Full cancellation uses `release_bundle` to roll back the reservation by releasing all booked resources together.
 
-JSON persistence writes a temporary file and renames it atomically. The deterministic intent router maps supported requests to actions without a language model. The Protocol inspector shows actual JSON-RPC messages, including initialization, tool discovery, calls, and elicitation. Vite builds the browser app; Vitest covers domain behavior, client flow, HTTP integration, and process restart. Playwright records the working browser flow; local speech synthesis and ffmpeg produce the video.
+JSON persistence writes a temporary file and renames it atomically. The deterministic intent router maps supported requests to actions without a language model. The Protocol inspector shows actual JSON-RPC messages, including initialization, tool discovery, calls, and elicitation. Vite builds the browser app; Vitest covers domain behavior, client flow, HTTP integration, and process restart. Playwright records the working browser flow; local speech synthesis and ffmpeg produce the video. During the hackathon, a Kiro Crew task-runner run implemented the check-in domain function and its tests from a written spec; we reviewed its commits and fixed three defects before merging.
 
 ## Challenges we ran into
 
@@ -50,7 +50,7 @@ During video assembly, our timing check rejected a segment by 51 ms. Encoded-fra
 
 ## Accomplishments that we're proud of
 
-The real-browser walkthrough completed search, hold, consent, booking, reload, clamp replacement, cancellation, and waitlist service with zero browser console errors. A fresh-copy installation passed the build and tests: 73 passed, with three check-in cases left as todo. The recorded demonstration is 157.2 seconds long.
+The real-browser walkthrough completed search, hold, consent, booking, reload, clamp replacement, cancellation, and waitlist service with zero browser console errors. A fresh-copy installation passed the build and all 92 tests. The recorded demonstration is 157.2 seconds long.
 
 ## What we learned
 
@@ -62,17 +62,17 @@ For a community tool library, complete-kit planning could help borrowers avoid i
 
 ## Scope and limitations
 
-All borrowers, inventory, and reservations are fictional. There is no real Alexa integration, authenticated consent, library connection, payment, notification, or AWS runtime service. No account, API key, or paid API is needed to run the demo. The router supports a small set of requests and two project templates. Scheduling uses fictional times; JSON storage supports one local server process. Physical check-in remains an unregistered throwing stub with todo tests.
+All borrowers, inventory, and reservations are fictional. There is no real Alexa integration, authenticated consent, library connection, payment, notification, or AWS runtime service. No account, API key, or paid API is needed to run the demo. The router supports a small set of requests and two project templates. Scheduling uses fictional times; JSON storage supports one local server process. Physical check-in exists in the domain layer with tests but is not yet exposed as an MCP tool or in the workbench.
 
 ## What's next
 
-Implement physical check-in with missing-part and damage handling. Before a real-library pilot, add authenticated borrowers, production storage, and real inventory integration, then evaluate complete-kit planning with library staff and borrowers.
+Expose check-in, which already handles missing and damaged parts in the domain layer, as an MCP tool and in the workbench. Before a real-library pilot, add authenticated borrowers, production storage, and real inventory integration, then evaluate complete-kit planning with library staff and borrowers.
 
 ## Product feedback
 
 # Product feedback
 
-The observations below concern this local, fictional BorrowMesh demo. Proposed improvements are requests, not claims that a tool failed. No AWS service is called at runtime.
+The observations below concern this local, fictional BorrowMesh demo. Proposed improvements are requests, not claims that a tool failed. No AWS service is called at runtime; Kiro Crew was used as a development tool (last section).
 
 ## MCP TypeScript SDK 1.32.1
 
@@ -109,9 +109,9 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 ## Vitest and happy-dom
 
 - **Use:** Vitest runs domain, router, palette, HTTP, and process-restart tests. happy-dom supplies a simulated document environment for client-flow tests.
-- **Worked well:** The verified fresh-copy run passed 73 tests, with three planned check-in tests marked todo. The client tests explicitly use deterministic responses rather than a real browser.
+- **Worked well:** The verified fresh-copy run passed all 92 tests. The client tests explicitly use deterministic responses rather than a real browser.
 - **Improve:** Keep examples clear about which checks need a real browser. BorrowMesh uses Playwright separately; no runner or document-emulation defect was recorded.
-- **Onboarding:** `npm test` runs the configured suite after dependency installation. The three todo cases represent unfinished project work.
+- **Onboarding:** `npm test` runs the configured suite after dependency installation.
 - **Use again:** Yes, alongside real-browser checks rather than treating document emulation as browser verification.
 
 ## Playwright and Chromium
@@ -180,7 +180,11 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 
 ## Kiro Crew (AWS Builder)
 
-TODO_KIRO_FEEDBACK
+- **Use:** We used Kiro Crew 0.9.0 with Kiro CLI 2.32.0 on the Kiro Free plan as a development tool during the hackathon. A task-runner run, given a written spec, implemented the `check_in_bundle` domain function and replaced the three planned `todo` tests with five real tests (commits 9740315, 05e5777 and ad75c78). No AWS service is called at runtime; this follows the rule that building with Kiro Crew qualifies on its own.
+- **Worked well:** Started from the dashboard's Task Runner with "auto-approve tool calls" for that run, it planned the work, edited three files in a separate git worktree, committed its steps, and the suite passed. The code followed the existing pure-function style of the domain layer. The run took about 13 minutes and used 15.39 credits.
+- **Improve:** Two earlier runs started with `kirocrew run` changed no code: the first worked in an empty per-run folder and was refused file writes and shell commands; the second reported "Task completed" although its step commits only touched `.kiro/settings`. Those two runs used 24.79 of the 50 free monthly credits. Our review of the successful run found three defects (missing items became available again, the message always said the bench was freed, and item IDs outside the booking were accepted), fixed in a follow-up commit. The friction log has the details.
+- **Onboarding:** The CLI installer copied an app to `/Applications`, and a login launcher was added. Sign-in was a browser flow with GitHub. Telemetry and content sharing could be switched off with `kiro-cli settings`. The dashboard needed a sign-in URL from `kirocrew token`, and its first-run dialog offered to import other agents' setups, which we skipped.
+- **Use again:** Yes, for well-scoped tasks started from the dashboard with a per-run approval, after reading the diff and running the tests ourselves.
 
 ## Feature requests
 
@@ -212,10 +216,58 @@ These are requests grounded in BorrowMesh's implementation, not reports of missi
 
 **Why it matters:** BorrowMesh includes its own browser MCP client, deterministic router, cards, and Protocol inspector. The hackathon FAQ permits this route without preview access. A starter would make that route concrete while leaving project-specific compatibility and booking logic to the entrant. This request does not claim an attempted preview-access failure.
 
+## 4. Per-run approval and fail-fast checks for `kirocrew run`
+
+**Priority: Important**
+
+**Request:** Let `kirocrew run` take the same scoped, per-run tool approval that the dashboard's Task Runner offers, run in the current git repository by default, and stop before planning when no write tool can be approved. Mark a run as not completed when its steps change none of the requested files.
+
+**Why it matters:** BorrowMesh's check-in function was built by a Kiro Crew run only after we moved from the CLI to the dashboard. Two CLI runs changed no code but used 24.79 of 50 free monthly credits, and one reported success. Earlier failure and a diff-based completion check would protect both credits and trust in the result.
+
 ## Friction log
 
 # BorrowMesh friction log
 
-This log is for friction with the tools and guidance this project depends on (the MCP TypeScript SDK and specification, and the hackathon's Alexa+ track material). Each entry records the task, steps, expected and actual results, severity, workaround, and an actionable suggestion.
+This log is for friction with the tools and guidance this project depends on (the MCP TypeScript SDK and specification, the hackathon's Alexa+ track material, and Kiro Crew, the AWS development tool used during the hackathon). Each entry records the task, steps, expected and actual results, severity, workaround, and an actionable suggestion.
 
-No such friction has been observed while building BorrowMesh so far. Problems in this project's own code or video tooling are described in the project story instead, not here.
+No friction with the MCP SDK, the specification, or the track material was observed while building BorrowMesh. Problems in this project's own code or video tooling are described in the project story instead. The entries below come from using Kiro Crew 0.9.0 with Kiro CLI 2.32.0 on macOS on October 20, 2026, to implement the `check_in_bundle` domain function.
+
+## 1. `kirocrew run` worked in an empty folder instead of the repository
+
+- **Task:** Implement `check_in_bundle` from a written spec with the Kiro Crew task runner.
+- **Steps:** Installed Kiro CLI and signed in with GitHub; from the repository folder, ran `kirocrew run <spec>.md --timeout 3600`.
+- **Expected:** The run edits the repository it was started from.
+- **Actual:** With `taskrunner.workspace_dir` unset, the run used a new per-run folder. The agent reported "The working directory has no source files — only `.kiro` config", and no repository file changed.
+- **Severity:** High — the run produced nothing.
+- **Workaround:** `kirocrew config set taskrunner.workspace_dir <repository path>`.
+- **Suggestion:** Default CLI runs to the current git repository, or stop and ask when the workspace has no source files.
+
+## 2. CLI runs cannot write files or run commands, and report it only in the log
+
+- **Task:** The same implementation, run again with the workspace set.
+- **Steps:** Ran `kirocrew run` with a narrower spec. Also added the tool names to `hooks.auto_approve_tools` in `config.json` (`kirocrew config set hooks.auto_approve_tools` answered "Unknown key").
+- **Expected:** Either a per-run approval option on the CLI, like the dashboard's "auto-approve tool calls", or a clear stop before planning.
+- **Actual:** File writes and shell commands were refused ("write, shell, read, and glob are all blocked on this task runner surface"), while the run kept planning, re-planning and reviewing. The `auto_approve_tools` entry made no difference for these runs. The first two runs used 24.79 of the 50 free monthly credits without a code change.
+- **Severity:** High — credits were spent with no possible result.
+- **Workaround:** Started the run from the dashboard's Task Runner with "auto-approve tool calls" checked for that run. That run implemented the function and its tests.
+- **Suggestion:** Add a scoped `--auto-approve` to `kirocrew run`, and fail fast before spending credits when no write tool can be approved.
+
+## 3. A run reported success although no code changed
+
+- **Task:** The second CLI run above.
+- **Steps:** Read the run summary and the run's git branch.
+- **Expected:** "Task completed" only when the requested changes exist and the tests pass.
+- **Actual:** The summary said "Task completed", and the branch had commits named "step 1: Add CheckInResult type…" and "step 2: Implement check_in_bundle…", but they only changed files under `.kiro/settings/`. The agent's own output said that tasks 1–3 "were never actually implemented". In the later, successful run, a commit message said "89/89" tests passed while our own run of the suite showed 91.
+- **Severity:** Medium — a reader of the summary could merge a no-op believing the feature exists.
+- **Workaround:** Read `git diff` of the run's branch and run the tests ourselves before merging.
+- **Suggestion:** Base completion on a non-empty diff in the requested files and on the test command's exit code, and flag steps that changed nothing.
+
+## 4. Self-review errors and throttling are easy to miss
+
+- **Task:** The first CLI run.
+- **Steps:** Read the run log after the run ended.
+- **Expected:** A failed self-review or a throttled model call is visible in the run summary.
+- **Actual:** Self-review raised `ValueError: BoundedSemaphore released too many times`, and later "Self-review could not verify the step: the review itself failed". Two steps hit "Bedrock is throttling requests" and were retried. These appeared only in the log.
+- **Severity:** Low.
+- **Workaround:** Reviewed the diff and ran the tests ourselves.
+- **Suggestion:** Show unverified steps and throttling retries, with their credit use, in the run summary.
