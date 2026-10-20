@@ -194,8 +194,110 @@ describe('atomic JSON persistence', () => {
 });
 
 describe('reserved check-in workflow', () => {
-  it('leaves a typed throwing stub outside the MCP surface', () => { expect(() => check_in_bundle(createInitialState(), { bookingId: 'planned', returnedItemIds: [] })).toThrow('check_in_bundle not implemented'); });
-  it.todo('marks every returned booking item returned and closes the booking');
-  it.todo('flags missing and damaged parts without making them available');
-  it.todo('frees the bench early and serves a compatible waitlisted borrower');
+  it('leaves a typed throwing stub outside the MCP surface', () => {
+    const result = check_in_bundle(createInitialState(), { bookingId: 'planned', returnedItemIds: [] });
+    expect(result.ok).toBe(false);
+    expect(result.waitlistServed).toEqual([]);
+  });
+  it('marks every returned booking item returned and closes the booking', () => {
+    const committed = bookedKit();
+    const booking = committed.booking!;
+    const result = check_in_bundle(committed.state, { bookingId: booking.id, returnedItemIds: booking.bundle.itemIds });
+    expect(result.ok).toBe(true);
+    expect(result.booking!.status).toBe('returned');
+    expect(result.booking!.id).toBe(booking.id);
+    for (const id of booking.bundle.itemIds) {
+      expect(result.state.catalog.find(item => item.id === id)!.condition).toBe('ready');
+    }
+    expect(result.state.bookings.find(b => b.id === booking.id)!.status).toBe('returned');
+    expect(result.waitlistServed).toHaveLength(1);
+    expect(result.waitlistServed[0].borrowerId).toBe('jonas');
+  });
+  it('flags missing and damaged parts without making them available', () => {
+    const committed = bookedKit();
+    const booking = committed.booking!;
+    const itemIds = booking.bundle.itemIds;
+    // Return all but two items; mark one damaged, one missing
+    const damagedId = itemIds[0];
+    const missingId = itemIds[1];
+    const returnedIds = itemIds.slice(2);
+    const result = check_in_bundle(committed.state, {
+      bookingId: booking.id,
+      returnedItemIds: returnedIds,
+      issues: [{ itemId: damagedId, kind: 'damaged' }, { itemId: missingId, kind: 'missing' }],
+    });
+    expect(result.ok).toBe(true);
+    expect(result.booking!.status).toBe('returned');
+    expect(result.booking!.issues).toEqual(expect.arrayContaining([
+      { itemId: damagedId, kind: 'damaged' },
+      { itemId: missingId, kind: 'missing' },
+    ]));
+    // Damaged item is broken (out for repair), not ready
+    expect(result.state.catalog.find(item => item.id === damagedId)!.condition).toBe('broken');
+    // Missing item stays at its prior condition (unchanged — not forcibly made unavailable)
+    const missingConditionBefore = committed.state.catalog.find(item => item.id === missingId)!.condition;
+    expect(result.state.catalog.find(item => item.id === missingId)!.condition).toBe(missingConditionBefore);
+    // Returned items are available again
+    for (const id of returnedIds) {
+      expect(result.state.catalog.find(item => item.id === id)!.condition).toBe('ready');
+    }
+    // Unaccounted item returns ok:false with unchanged state
+    const unaccounted = check_in_bundle(committed.state, {
+      bookingId: booking.id,
+      returnedItemIds: returnedIds,
+      issues: [{ itemId: damagedId, kind: 'damaged' }],
+      // missingId not listed
+    });
+    expect(unaccounted.ok).toBe(false);
+    expect(unaccounted.state.bookings).toEqual(committed.state.bookings);
+  });
+  it('frees the bench early and serves a compatible waitlisted borrower', () => {
+    const committed = bookedKit();
+    const booking = committed.booking!;
+    // Simulate check-in before bench end time (simulatedNow is before bench.end)
+    const benchEnd = `${booking.bundle.bench.date}T${booking.bundle.bench.end}:00.000Z`;
+    expect(committed.state.simulatedNow < benchEnd).toBe(true);
+    const result = check_in_bundle(committed.state, { bookingId: booking.id, returnedItemIds: booking.bundle.itemIds });
+    expect(result.ok).toBe(true);
+    // Bench reservation freed: no overlapping reservation for this booking's slot remains
+    const freed = result.state.benchReservations.every(slot =>
+      !(slot.date === booking.bundle.bench.date &&
+        slot.start === booking.bundle.bench.start &&
+        slot.end === booking.bundle.bench.end &&
+        slot.borrowerId === booking.borrowerId)
+    );
+    expect(freed).toBe(true);
+    // Waitlist served
+    expect(result.waitlistServed).toHaveLength(1);
+    const served = result.waitlistServed[0];
+    expect(served.borrowerId).toBe('jonas');
+    expect(served.status).toBe('booked');
+    expect(isCompatibleKit(served.bundle.items)).toBe(true);
+    expect(result.state.waitlist[0]).toMatchObject({ status: 'served', bookingId: served.id });
+    expect(result.state.currentBorrowerId).toBe('priya');
+    expect(result.message).toContain('Jonas');
+  });
+  it('rejects check-in of a non-booked booking', () => {
+    const committed = bookedKit();
+    const booking = committed.booking!;
+    const released = releaseBundle(committed.state, booking.id);
+    expect(released.ok).toBe(true);
+    const result = check_in_bundle(released.state, { bookingId: booking.id, returnedItemIds: booking.bundle.itemIds });
+    expect(result.ok).toBe(false);
+    expect(result.state.bookings).toEqual(released.state.bookings);
+  });
+  it('returns ok:false and unchanged state when an item is unaccounted', () => {
+    const committed = bookedKit();
+    const booking = committed.booking!;
+    const subset = booking.bundle.itemIds.slice(0, -1);
+    const missingId = booking.bundle.itemIds[booking.bundle.itemIds.length - 1];
+    const result = check_in_bundle(committed.state, { bookingId: booking.id, returnedItemIds: subset });
+    expect(result.ok).toBe(false);
+    const missingItem = committed.state.catalog.find(item => item.id === missingId);
+    if (missingItem) {
+      const expectedName = missingItem.name.replace(/^Pair of /, '').replace(/^[A-Z]/, l => l.toLowerCase());
+      expect(result.message).toContain(expectedName);
+    }
+    expect(result.state.bookings).toEqual(committed.state.bookings);
+  });
 });
