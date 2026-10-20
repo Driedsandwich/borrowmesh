@@ -4,11 +4,13 @@ import { LibraryStore } from '../src/domain/library.js';
 import { localDataPath } from '../src/server/app.js';
 
 // Reset the running server when available; otherwise reset the local file offline.
-const health = await fetch('http://127.0.0.1:3002/health').catch(() => undefined);
+const port = Number(process.env.PORT ?? 3002);
+if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('PORT must be a valid TCP port.');
+const health = await fetch(`http://127.0.0.1:${port}/health`).catch(() => undefined);
 if (health?.ok) {
-  if ((await health.json()).name !== 'borrowmesh') throw new Error('Port 3002 is occupied by a different service.');
+  if ((await health.json()).name !== 'borrowmesh') throw new Error(`Port ${port} is occupied by a different service.`);
   const client = new Client({ name: 'borrowmesh-reset', version: '1.0.0' });
-  const transport = new StreamableHTTPClientTransport(new URL('http://127.0.0.1:3002/mcp'));
+  const transport = new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`));
   try {
     await client.connect(transport);
     const outcome = await client.callTool({ name: 'reset_demo', arguments: {} });
@@ -16,7 +18,6 @@ if (health?.ok) {
   } finally { await transport.terminateSession().catch(() => undefined); await client.close(); }
 } else {
   const store = new LibraryStore(localDataPath(process.env.DATA_FILE));
-  await store.load();
   await store.reset();
 }
 console.log('BorrowMesh fictional Saturday scenario reset.');

@@ -167,7 +167,7 @@ export function releaseBundle(input: LibraryState, bookingId: string): ReleaseRe
     const search = findCompatibleKits(state, entry.request); state = search.state;
     const bundle = search.bundles.find(value => !value.requiresConsent || entry.acceptsSubstitutions);
     if (bundle) {
-      // The fictional waitlist records whether compatible substitutions were accepted.
+      // Joining with acceptsSubstitutions gives advance consent to compatible setup changes.
       const held = holdResources(state, bundle.id); state = held.state;
       if (held.hold) {
         const committed = commitBundle(state, held.hold.id, entry.acceptsSubstitutions); state = committed.state;
@@ -188,13 +188,15 @@ export function reportIssue(input: LibraryState, bookingId: string, itemId: stri
   // even when there is no compatible spare to swap into this booking.
   booking.bundle.items = booking.bundle.items.map(value => value.id === itemId ? clone(affected) : value);
   const keptItemIds = booking.bundle.itemIds.filter(id => id !== itemId);
-  const replacement = state.catalog.find(candidate => {
+  const candidates = state.catalog.filter(candidate => {
     if (candidate.id === itemId || candidate.condition !== 'ready' || candidate.attributes.role !== affected.attributes.role || candidate.quantity < affected.quantity) return false;
     const testBundle = { ...booking.bundle, itemIds: [...keptItemIds, candidate.id] };
     const testItems = testBundle.itemIds.map(id => state.catalog.find(value => value.id === id)!);
     return isCompatibleKit(testItems, booking.bundle.project, booking.bundle.bench.outlet) && !conflictsFor(state, testBundle, undefined, booking.id).length;
   });
+  const replacement = candidates.find(candidate => !['saw', 'drill'].includes(affected.attributes.role) || candidate.attributes.power === affected.attributes.power);
   booking.issues.push({ itemId, kind, ...(replacement ? { replacementId: replacement.id } : {}) });
+  if (!replacement && candidates.length) return { state, ok: false, message: `The ${kind} item was flagged. The available replacement would change your setup. Find a new kit to review the change and give consent; all other reservations are kept.`, booking, affectedItemId: itemId, keptItemIds };
   if (!replacement) return { state, ok: false, message: `The ${kind} item was flagged. No compatible single-item replacement is available; all other reservations are kept.`, booking, affectedItemId: itemId, keptItemIds };
   booking.bundle.itemIds = booking.bundle.itemIds.map(id => id === itemId ? replacement.id : id);
   booking.bundle.items = booking.bundle.itemIds.map(id => clone(state.catalog.find(value => value.id === id)!));
@@ -213,8 +215,9 @@ export class LibraryStore {
       const parsed: unknown = JSON.parse(await readFile(this.file, 'utf8'));
       if (!parsed || typeof parsed !== 'object' || (parsed as LibraryState).schemaVersion !== 1 || !Array.isArray((parsed as LibraryState).catalog) || !Array.isArray((parsed as LibraryState).bookings)) throw new Error('Invalid BorrowMesh state file; refusing to replace it.');
       this.state = parsed as LibraryState;
-      if (!this.customClock) this.clock = new SimulatedClock(Date.parse(this.state.simulatedNow) + (this.state.savedAtWallTime ? Math.max(0, Date.now() - this.state.savedAtWallTime) : 0));
+      if (!this.customClock) this.clock = new SimulatedClock(this.state.simulatedNow);
     } catch (error) {
+      if (error instanceof SyntaxError) throw new Error(`Cannot parse BorrowMesh data file ${this.file}; run npm run demo:reset or delete the file to recover.`);
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
       await this.save(createInitialState(new Date(this.clock.now()).toISOString()));
     }

@@ -28,7 +28,20 @@ export async function createApplication(options: { dataFile?: string; clock?: Cl
   const store = new LibraryStore(localDataPath(options.dataFile), options.clock);
   await store.load();
   const app = createMcpExpressApp({ host: '127.0.0.1' });
-  const sessions = new Map<string, { server: McpServer; transport: StreamableHTTPServerTransport }>();
+  const sessions = new Map<string, { server: McpServer; transport: StreamableHTTPServerTransport; lastActivity: number }>();
+  const sessionIdleTimeout = 30 * 60_000;
+  let initialization: Promise<unknown> = Promise.resolve();
+  async function closeSession(id: string) {
+    const session = sessions.get(id);
+    sessions.delete(id);
+    await session?.server.close();
+  }
+  async function expireSessions() {
+    const now = Date.now();
+    await Promise.allSettled([...sessions].filter(([, session]) => now - session.lastActivity > sessionIdleTimeout).map(([id]) => closeSession(id)));
+  }
+  const sessionSweep = setInterval(() => { void expireSessions(); }, 60_000);
+  sessionSweep.unref();
   let transaction: Promise<unknown> = Promise.resolve();
   function mutate<T>(operation: () => Promise<T>): Promise<T> {
     const next = transaction.then(operation);
@@ -151,21 +164,36 @@ export async function createApplication(options: { dataFile?: string; clock?: Cl
     if (!['POST', 'GET', 'DELETE'].includes(req.method)) { res.setHeader('Allow', 'POST, GET, DELETE'); res.sendStatus(405); return; }
     const sessionId = req.get('mcp-session-id');
     try {
+      await expireSessions();
       const existing = sessionId ? sessions.get(sessionId) : undefined;
-      if (existing) { await existing.transport.handleRequest(req, res, req.body); return; }
+      if (existing) {
+        existing.lastActivity = Date.now();
+        await existing.transport.handleRequest(req, res, req.body);
+        existing.lastActivity = Date.now();
+        return;
+      }
       if (sessionId) { res.status(404).json({ jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Session not found; reconnect to initialize.' } }); return; }
       if (req.method !== 'POST' || !isInitializeRequest(req.body)) { res.status(400).json({ jsonrpc: '2.0', id: null, error: { code: -32000, message: 'Initialize first, then provide Mcp-Session-Id.' } }); return; }
-      if (sessions.size >= 64) { res.status(503).send('Too many demo sessions.'); return; }
-      const server = makeServer();
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: id => { sessions.set(id, { server, transport }); },
-        onsessionclosed: async id => { sessions.delete(id); await server.close(); },
+      // Serialize initialization so concurrent clients cannot exceed the session limit.
+      const pending = initialization.then(async () => {
+        if (sessions.size >= 64) {
+          const oldest = [...sessions].reduce((a, b) => a[1].lastActivity <= b[1].lastActivity ? a : b);
+          await closeSession(oldest[0]);
+        }
+        const server = makeServer();
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: id => { sessions.set(id, { server, transport, lastActivity: Date.now() }); },
+          onsessionclosed: async id => { sessions.delete(id); await server.close(); },
+        });
+        await server.connect(transport);
+        const sdkClose = transport.onclose;
+        transport.onclose = () => { if (transport.sessionId) sessions.delete(transport.sessionId); sdkClose?.(); };
+        try { await transport.handleRequest(req, res, req.body); }
+        catch (error) { await server.close(); throw error; }
       });
-      await server.connect(transport);
-      const sdkClose = transport.onclose;
-      transport.onclose = () => { if (transport.sessionId) sessions.delete(transport.sessionId); sdkClose?.(); };
-      await transport.handleRequest(req, res, req.body);
+      initialization = pending.catch(() => undefined);
+      await pending;
     } catch (error) {
       if (!res.headersSent) res.status(500).json({ jsonrpc: '2.0', id: null, error: { code: -32603, message: error instanceof Error ? error.message : 'Transport error.' } });
     }
@@ -178,7 +206,8 @@ export async function createApplication(options: { dataFile?: string; clock?: Cl
     app, store,
     async listen(port = 3002) {
       listener = await new Promise<HttpServer>((accept, reject) => {
-        const http = app.listen(port, '127.0.0.1', () => accept(http));
+        const http = app.listen(port, '127.0.0.1');
+        http.once('listening', () => accept(http));
         http.once('error', reject);
       });
       const address = listener.address();
@@ -186,6 +215,8 @@ export async function createApplication(options: { dataFile?: string; clock?: Cl
       return { port: address.port, url: `http://127.0.0.1:${address.port}/mcp` };
     },
     async close() {
+      clearInterval(sessionSweep);
+      await initialization;
       await transaction;
       await Promise.allSettled([...sessions.values()].map(session => session.server.close()));
       sessions.clear();

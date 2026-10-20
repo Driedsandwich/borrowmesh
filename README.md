@@ -30,10 +30,12 @@ The default state file is `data/library.json`, excluded from source control. Wri
 ## How it works
 
 1. Read the project requirements and compare complete bundles. Search checks compatible power sources, bit sizes, item availability, bench availability, and return deadlines. Ranking prefers fewer substitutions, then an earlier feasible bench, then a shorter loan.
-2. Select a bundle to hold all its items and its bench together. A hold expires after ten minutes of **simulated time**. The fictional clock ticks with elapsed real time and accounts for elapsed time across restarts. Tests can also advance it deterministically. It does not represent a live library clock.
+2. Select a bundle to hold all its items and its bench together. A hold expires after ten minutes of **simulated time**. The fictional clock ticks with elapsed real time only while the server runs and resumes from the saved simulated time after a restart. Tests can also advance it deterministically. It does not represent a live library clock.
 3. Commit the selected hold. If a substitute changes the requested setup, the MCP server requests form consent. Declining or cancelling books nothing. After acceptance the server revalidates all resources and saves the booking once, or books nothing and explains the conflict.
 4. Retrieve the saved booking after reconnecting. If an item breaks or runs late, re-plan only that affected item and retain the other resources.
 5. Cancel to release every item and the bench together. The server attempts to serve compatible waitlisted borrowers and reports the result.
+
+The fictional waitlisted borrower Jonas joined the waitlist accepting compatible substitutions, so releasing a booking can book a complete kit for him without a new dialog.
 
 The workbench places conversation and suggested utterances on the left, with item tiles and a bench timeline on the right. Bundle cards compare complete options horizontally. Browser speech synthesis can read English responses; text input and chips remain available. Microphone input uses `SpeechRecognition` only when the browser supports it. The separate deterministic intent router has no language-model dependency.
 

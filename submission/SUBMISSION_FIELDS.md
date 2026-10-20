@@ -30,6 +30,8 @@ Priya can compare three complete options: “Plug-in kit · standard clamps,” 
 
 Reloading retrieves the saved booking. “The clamps are broken” replaces only the clamp item and preserves the other reservations. “Cancel my booking” releases the entire set and bench; in the canonical scenario, Jonas on the fictional waitlist receives a complete booking.
 
+The fictional waitlisted borrower Jonas joined the waitlist accepting compatible substitutions, so releasing a booking can book a complete kit for him without a new dialog.
+
 ## How we built it
 
 The TypeScript application uses the Model Context Protocol (MCP), a standard for connecting clients to tools and data. The MCP TypeScript SDK 1.32.1 supplies the server and browser client over Streamable HTTP, negotiating protocol 2025-11-25. Eight tools cover state, search, holds, commit, release, issue reporting, booking retrieval, and reset. JSON resources expose the catalog and bookings. The `plan-weekend-project` prompt describes the planning workflow.

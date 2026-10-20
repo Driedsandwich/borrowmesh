@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ElicitRequestSchema, LATEST_PROTOCOL_VERSION, type JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { createApplication, localDataPath } from '../src/server/app.js';
 import type { LibraryState, Bundle, Hold, Booking, CommitResult, FindResult, HoldResult, IssueResult, ReleaseResult } from '../src/shared/types.js';
@@ -14,6 +15,22 @@ let endpoint: string;
 let dataFile: string;
 const connections: Array<{ client: Client; transport: StreamableHTTPClientTransport }> = [];
 const request = { project: 'planter-box', date: '2026-10-24', start: '13:00', end: '17:00' };
+
+async function initializeSession() {
+  const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' }, body: JSON.stringify({
+    jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'session-test', version: '1.0.0' } },
+  }) });
+  expect(response.status).toBe(200);
+  await response.text();
+  const id = response.headers.get('mcp-session-id');
+  expect(id).toBeTruthy();
+  return id!;
+}
+async function listSessionTools(id: string) {
+  const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', 'Mcp-Session-Id': id, 'MCP-Protocol-Version': '2025-11-25' }, body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }) });
+  await response.text();
+  return response.status;
+}
 
 async function connect(action: 'accept' | 'decline' | 'cancel' = 'accept', form = true) {
   const traffic: JSONRPCMessage[] = [];
@@ -60,9 +77,64 @@ afterEach(async () => {
     await client.close().catch(() => undefined);
   }
   await app.close();
+  vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe('real MCP over Streamable HTTP', () => {
+  it('admits a new SDK client after more than 64 sessions and evicts the least recently used session', async () => {
+    let now = Date.now();
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const ids: string[] = [];
+    for (let count = 0; count < 64; count++) { now++; ids.push(await initializeSession()); }
+    now++;
+    expect(await listSessionTools(ids[0])).toBe(200);
+    now++;
+    await initializeSession();
+    now++;
+    const fresh = await connect();
+    expect((await fresh.client.listTools()).tools).toHaveLength(8);
+    expect(await listSessionTools(ids[0])).toBe(200);
+    expect(await listSessionTools(ids[1])).toBe(404);
+    expect(await listSessionTools(ids[2])).toBe(404);
+  });
+
+  it('keeps the 64-session limit when initialization requests arrive concurrently', async () => {
+    const ids = await Promise.all(Array.from({ length: 70 }, () => initializeSession()));
+    const statuses = await Promise.all(ids.map(id => listSessionTools(id)));
+    expect(statuses.filter(status => status === 200)).toHaveLength(64);
+    expect(statuses.filter(status => status === 404)).toHaveLength(6);
+    expect((await (await connect()).client.listTools()).tools).toHaveLength(8);
+  });
+
+  it('sweeps sessions idle for more than 30 minutes and preserves recently active sessions', async () => {
+    await app.close();
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    app = await createApplication({ dataFile });
+    endpoint = (await app.listen(0)).url;
+    let now = Date.now();
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const idle = await initializeSession();
+    const active = await initializeSession();
+    now += 30 * 60_000;
+    expect(await listSessionTools(active)).toBe(200);
+    const close = vi.spyOn(StreamableHTTPServerTransport.prototype, 'close');
+    now++;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(await listSessionTools(idle)).toBe(404);
+    expect(await listSessionTools(active)).toBe(200);
+  });
+
+  it('expires an idle session on a request before the next sweep', async () => {
+    let now = Date.now();
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const id = await initializeSession();
+    now += 30 * 60_000 + 1;
+    expect(await listSessionTools(id)).toBe(404);
+    expect((await (await connect()).client.listTools()).tools).toHaveLength(8);
+  });
+
   it.each([
     ['2025-11-25', '2025-11-25'], ['2026-07-28', '2025-11-25'], ['2025-03-26', '2025-03-26'],
   ])('negotiates requested %s to %s through the SDK', async (requested, expected) => {

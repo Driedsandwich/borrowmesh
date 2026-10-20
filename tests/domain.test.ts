@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { check_in_bundle, commitBundle, createInitialState, DEMO_DATE, DEMO_NOW, expireHolds, findCompatibleKits, holdResources, isCompatibleKit, LibraryStore, releaseBundle, reportIssue, SimulatedClock } from '../src/domain/index.js';
@@ -9,7 +9,7 @@ function heldKit() { const found = findCompatibleKits(createInitialState(), requ
 function bookedKit() { const held = heldKit(); return commitBundle(held.state, held.hold!.id, true); }
 const temporaryDirectories: string[] = [];
 async function temporaryFolder() { await mkdir('data', { recursive: true }); const folder = await mkdtemp(resolve('data', 'domain-test-')); temporaryDirectories.push(folder); return folder; }
-afterEach(async () => { for (const folder of temporaryDirectories.splice(0)) await rm(folder, { recursive: true, force: true }); });
+afterEach(async () => { vi.useRealTimers(); for (const folder of temporaryDirectories.splice(0)) await rm(folder, { recursive: true, force: true }); });
 
 describe('complete compatible bundles', () => {
   it('provides the canonical catalog, templates and fictional borrowers', () => {
@@ -87,6 +87,30 @@ describe('holds and atomic commit', () => {
 });
 
 describe('targeted replanning and release', () => {
+  it.each(['saw-circular', 'drill-b'])('records the issue without swapping %s for a setup-changing replacement', itemId => {
+    const found = findCompatibleKits(createInitialState(), request);
+    const bundle = found.bundles.find(bundle => bundle.itemIds.includes('drill-b'))!;
+    const held = holdResources(found.state, bundle.id);
+    const committed = commitBundle(held.state, held.hold!.id, true);
+    const original = committed.booking!;
+    if (itemId === 'drill-b') {
+      // Include the corded drill's accessory so the replacement is compatible.
+      original.bundle.itemIds.push('extension');
+      original.bundle.items.push(structuredClone(committed.state.catalog.find(item => item.id === 'extension')!));
+    }
+    const result = reportIssue(committed.state, original.id, itemId, 'broken');
+    expect(result.ok).toBe(false);
+    expect(result.replacement).toBeUndefined();
+    expect(result.message).toContain('would change your setup');
+    expect(result.message).toContain('Find a new kit');
+    expect(result.message).toContain('give consent');
+    expect(result.booking!.issues).toEqual([{ itemId, kind: 'broken' }]);
+    expect(result.booking!.bundle).toEqual({ ...original.bundle, items: original.bundle.items.map(item => item.id === itemId ? { ...item, condition: 'broken' } : item) });
+    expect(result.state.loans).toEqual(committed.state.loans);
+    expect(result.state.holds).toEqual(committed.state.holds);
+    expect(result.state.benchReservations).toEqual(committed.state.benchReservations);
+    expect(result.state.waitlist).toEqual(committed.state.waitlist);
+  });
   it.each(['broken', 'late'] as const)('replaces only the affected clamps reported %s', kind => {
     const committed = bookedKit(); const original = committed.booking!;
     const result = reportIssue(committed.state, original.id, 'clamps-standard', kind);
@@ -97,6 +121,7 @@ describe('targeted replanning and release', () => {
     expect(result.state.catalog.find(item => item.id === 'clamps-standard')!.condition).toBe(kind);
     expect(result.booking!.bundle.name).toContain('wide-jaw clamps');
     expect(result.booking!.bundle.name).not.toContain('standard clamps');
+    expect(result.booking!.issues).toEqual([{ itemId: 'clamps-standard', kind, replacementId: 'clamps-wide' }]);
   });
   it('keeps other resources when no compatible single-item replacement exists', () => {
     const committed = bookedKit(); const result = reportIssue(committed.state, committed.booking!.id, 'bit-3', 'broken');
@@ -122,6 +147,17 @@ describe('targeted replanning and release', () => {
     expect(result.state.bookings.filter(booking => booking.status === 'booked')).toEqual([]);
     expect(result.message).toBe('All items and the bench were released together. No one on the waitlist can book a complete kit yet.');
   });
+  it.each(['corded drill', 'manual saw'])('does not serve a waitlisted borrower who did not accept a %s setup change', setup => {
+    const committed = bookedKit();
+    committed.state.waitlist[0].acceptsSubstitutions = false;
+    committed.state.catalog.find(item => item.id === (setup === 'corded drill' ? 'drill-b' : 'saw-circular'))!.condition = 'broken';
+    const result = releaseBundle(committed.state, committed.booking!.id);
+    expect(result.ok).toBe(true);
+    expect(result.waitlistServed).toEqual([]);
+    expect(result.state.waitlist[0]).toMatchObject({ status: 'waiting', acceptsSubstitutions: false });
+    expect(result.state.bookings.filter(booking => booking.status === 'booked')).toEqual([]);
+    expect(result.state.holds).toEqual(committed.state.holds);
+  });
 });
 
 describe('atomic JSON persistence', () => {
@@ -139,10 +175,16 @@ describe('atomic JSON persistence', () => {
     const held = heldKit(); await store.save(held.state); clock.advance(11);
     const restarted = new LibraryStore(file, clock); await restarted.load(); expect(restarted.snapshot().holds[0].status).toBe('expired');
   });
-  it('counts elapsed downtime toward hold expiry after a real-clock restart', async () => {
+  it('resumes the saved simulated time without downtime, then expires holds while running', async () => {
+    vi.useFakeTimers();
     const folder = await temporaryFolder(); const file = resolve(folder, 'library.json');
-    const state = heldKit().state; state.savedAtWallTime = Date.now() - 11 * 60_000;
+    const state = heldKit().state;
+    state.simulatedNow = `${DEMO_DATE}T12:07:00.000Z`;
+    state.savedAtWallTime = Date.now() - 24 * 60 * 60_000;
     await writeFile(file, JSON.stringify(state)); const restarted = new LibraryStore(file); await restarted.load();
+    expect(restarted.snapshot().simulatedNow).toBe(state.simulatedNow);
+    expect(restarted.snapshot().holds[0].status).toBe('active');
+    await vi.advanceTimersByTimeAsync(4 * 60_000);
     expect(restarted.snapshot().holds[0].status).toBe('expired');
   });
   it('never reuses a stale hold identity after reset', async () => {

@@ -9,6 +9,7 @@ export interface ToolResponse { kind: string; message: string; [key: string]: un
 export class BorrowMeshClient {
   private client?: Client;
   private transport?: StreamableHTTPClientTransport;
+  private readonly onPageHide = () => { this.onDisconnect(); void this.close(); };
   constructor(
     private readonly onTraffic: (entry: ProtocolEntry) => void,
     private readonly onElicitation: (request: ElicitRequest, signal?: AbortSignal) => Promise<ElicitResult>,
@@ -19,6 +20,7 @@ export class BorrowMeshClient {
     await this.close();
     const client = new Client({ name: 'borrowmesh-workbench', version: '1.0.0' }, { capabilities: { elicitation: { form: {} } } });
     const transport = new StreamableHTTPClientTransport(new URL('/mcp', window.location.origin), {
+      fetch: (input, init) => fetch(input, init?.method === 'DELETE' ? { ...init, keepalive: true } : init),
       reconnectionOptions: { maxRetries: 2, initialReconnectionDelay: 1000, maxReconnectionDelay: 3000, reconnectionDelayGrowFactor: 1.5 },
     });
     let protocolVersion = '';
@@ -45,6 +47,7 @@ export class BorrowMeshClient {
     };
     this.client = client;
     this.transport = transport;
+    window.addEventListener('pagehide', this.onPageHide);
     try {
       await client.connect(transport);
       if (protocolVersion !== '2025-11-25') throw new Error(`Required protocol 2025-11-25; server negotiated ${protocolVersion || 'an unknown version'}.`);
@@ -65,6 +68,7 @@ export class BorrowMeshClient {
   }
 
   async close(): Promise<void> {
+    window.removeEventListener('pagehide', this.onPageHide);
     const client = this.client;
     const transport = this.transport;
     this.client = undefined;
