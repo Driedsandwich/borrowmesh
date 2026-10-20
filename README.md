@@ -11,7 +11,7 @@ The project includes a self-hosted Model Context Protocol (MCP) server and a **s
 Use **Node.js 22.12 or later within the Node 22 series**, with npm.
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
@@ -138,9 +138,9 @@ BorrowMesh is a new project built on October 20, 2026 (JST), during the submissi
 - Consent represents the demo borrower; it is not authenticated identity or a real-world authorization system.
 - JSON persistence supports this local demo, not multiple independent server processes or a production database.
 - Voice and microphone availability depend on the browser and local operating system. Text and chips always remain available.
-- `check_in_bundle` exists in the domain layer only; it is not an MCP tool yet. No public hosting, real Alexa device integration, account setup, publishing, video upload, or hackathon submission is included.
+- `check_in_bundle` exists in the domain layer only; it is not an MCP tool yet. No public hosting, real Alexa device integration, account setup, or publishing is included.
 
-[`FRICTION_LOG.md`](FRICTION_LOG.md) records only observed issues with the project tools and SDK. It does not manufacture feedback or treat unrun paths as successful.
+[`FRICTION_LOG.md`](FRICTION_LOG.md) records only issues actually observed with the tools and guidance this project depends on; all of its entries concern Kiro Crew. It does not manufacture feedback or treat unrun paths as successful.
 
 ## License
 

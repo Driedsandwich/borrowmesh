@@ -19,7 +19,7 @@ No friction with the MCP SDK, the specification, or the track material was obser
 - **Task:** The same implementation, run again with the workspace set.
 - **Steps:** Ran `kirocrew run` with a narrower spec. Also added the tool names to `hooks.auto_approve_tools` in `config.json` (`kirocrew config set hooks.auto_approve_tools` answered "Unknown key").
 - **Expected:** Either a per-run approval option on the CLI, like the dashboard's "auto-approve tool calls", or a clear stop before planning.
-- **Actual:** File writes and shell commands were refused ("write, shell, read, and glob are all blocked on this task runner surface"), while the run kept planning, re-planning and reviewing. The `auto_approve_tools` entry made no difference for these runs. The first two runs used 24.79 of the 50 free monthly credits without a code change.
+- **Actual:** File writes and shell commands were refused ("write, shell, read, and glob are all blocked on this task runner surface"), while the run continued to its end instead of stopping. The `auto_approve_tools` entry made no difference for these runs. The first two runs used 24.79 of the 50 free monthly credits without a code change.
 - **Severity:** High — credits were spent with no possible result.
 - **Workaround:** Started the run from the dashboard's Task Runner with "auto-approve tool calls" checked for that run. That run implemented the function and its tests.
 - **Suggestion:** Add a scoped `--auto-approve` to `kirocrew run`, and fail fast before spending credits when no write tool can be approved.

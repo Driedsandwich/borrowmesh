@@ -134,7 +134,7 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 
 - **Use:** Generating narration (voice `am_michael`) and assistant responses (voice `af_heart`) locally, across 18 clips in 11 segments, with `soundfile` writing the clips. We chose it because its model weights are Apache-2.0 licensed; macOS system voices are licensed for personal, non-commercial use only.
 - **Worked well:** One Python process loads the model once and writes every clip; our scripts measure each clip and normalize the audio. No network service, account, or API key is needed.
-- **Improve:** At the default speed the raw recording was 164.8 seconds, so the finished video would have exceeded our 140–165 second target; we set speed 1.1. A documented speaking-rate figure for each voice would make narration planning easier.
+- **Improve:** At speed 1.0 the raw recording was 164.8 seconds, so the finished video would have exceeded our 140–165 second target; we set speed 1.1. A documented speaking-rate figure for each voice would make narration planning easier.
 - **Onboarding:** Install `kokoro-onnx` and `soundfile` into a Python environment and download two model files (about 205 MB) from the kokoro-onnx release page.
 - **Use again:** Yes, for local narration that can be published.
 
@@ -173,7 +173,7 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 ## AI coding agents (OpenAI Codex and Claude Code)
 
 - **Use:** OpenAI Codex implemented written specifications; Claude Code reviewed the code, exercised the real browser, recorded the video, and verified results. The entrant is solo.
-- **Worked well:** The supplied verification records build/test success and a complete browser walkthrough.
+- **Worked well:** Recorded verification shows build/test success and a complete browser walkthrough.
 - **Improve:** Keep implementation claims separate from independently executed checks and unfinished features. No product-specific onboarding observation was recorded.
 - **Onboarding:** No separate setup experience was recorded.
 - **Use again:** Yes, with executable checks and explicit development disclosure.
@@ -247,7 +247,7 @@ No friction with the MCP SDK, the specification, or the track material was obser
 - **Task:** The same implementation, run again with the workspace set.
 - **Steps:** Ran `kirocrew run` with a narrower spec. Also added the tool names to `hooks.auto_approve_tools` in `config.json` (`kirocrew config set hooks.auto_approve_tools` answered "Unknown key").
 - **Expected:** Either a per-run approval option on the CLI, like the dashboard's "auto-approve tool calls", or a clear stop before planning.
-- **Actual:** File writes and shell commands were refused ("write, shell, read, and glob are all blocked on this task runner surface"), while the run kept planning, re-planning and reviewing. The `auto_approve_tools` entry made no difference for these runs. The first two runs used 24.79 of the 50 free monthly credits without a code change.
+- **Actual:** File writes and shell commands were refused ("write, shell, read, and glob are all blocked on this task runner surface"), while the run continued to its end instead of stopping. The `auto_approve_tools` entry made no difference for these runs. The first two runs used 24.79 of the 50 free monthly credits without a code change.
 - **Severity:** High — credits were spent with no possible result.
 - **Workaround:** Started the run from the dashboard's Task Runner with "auto-approve tool calls" checked for that run. That run implemented the function and its tests.
 - **Suggestion:** Add a scoped `--auto-approve` to `kirocrew run`, and fail fast before spending credits when no write tool can be approved.
