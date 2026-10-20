@@ -134,7 +134,7 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 
 - **Use:** Generating narration (voice `am_michael`) and assistant responses (voice `af_heart`) locally, across 18 clips in 11 segments, with `soundfile` writing the clips. We chose it because its model weights are Apache-2.0 licensed; macOS system voices are licensed for personal, non-commercial use only.
 - **Worked well:** One Python process loads the model once and writes every clip; our scripts measure each clip and normalize the audio. No network service, account, or API key is needed.
-- **Improve:** At speed 1.0 the raw recording was 164.8 seconds, so the finished video would have exceeded our 140–165 second target; we set speed 1.1. A documented speaking-rate figure for each voice would make narration planning easier.
+- **Improve:** At speed 1.0 the raw recording was 164.8 seconds, and the finished video adds title and end cards, so it would have run past our 140–165 second target; we set speed 1.1. A documented speaking-rate figure for each voice would make narration planning easier.
 - **Onboarding:** Install `kokoro-onnx` and `soundfile` into a Python environment and download two model files (about 205 MB) from the kokoro-onnx release page.
 - **Use again:** Yes, for local narration that can be published.
 
@@ -267,7 +267,7 @@ No friction with the MCP SDK, the specification, or the track material was obser
 - **Task:** The first CLI run.
 - **Steps:** Read the run log after the run ended.
 - **Expected:** A failed self-review or a throttled model call is visible in the run summary.
-- **Actual:** Self-review raised `ValueError: BoundedSemaphore released too many times`, and later "Self-review could not verify the step: the review itself failed". Model calls hit "Bedrock is throttling requests" twice and were retried. These appeared only in the log.
+- **Actual:** Self-review raised `ValueError: BoundedSemaphore released too many times`, and later "Self-review could not verify the step: the review itself failed". Model calls hit "Bedrock is throttling requests" twice and were retried. We found them by reading the run log.
 - **Severity:** Low.
 - **Workaround:** Reviewed the diff and ran the tests ourselves.
 - **Suggestion:** Show unverified steps and throttling retries, with their credit use, in the run summary.
