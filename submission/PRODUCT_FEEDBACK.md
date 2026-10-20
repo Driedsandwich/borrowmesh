@@ -98,9 +98,9 @@ The observations below concern this local, fictional BorrowMesh demo. Proposed i
 - **Onboarding:** These controls depend on browser and operating-system support. The verified recording does not establish microphone or live speech-output success.
 - **Use again:** Yes, as optional controls with text retained.
 
-## AI coding agents
+## AI coding agents (OpenAI Codex and Claude Code)
 
-- **Use:** One agent implemented written specifications; a second reviewed the code, exercised the real browser, recorded the video, and verified results. The entrant is solo.
+- **Use:** OpenAI Codex implemented written specifications; Claude Code reviewed the code, exercised the real browser, recorded the video, and verified results. The entrant is solo.
 - **Worked well:** The supplied verification records build/test success and a complete browser walkthrough.
 - **Improve:** Keep implementation claims separate from independently executed checks and unfinished features. No product-specific onboarding observation was recorded.
 - **Onboarding:** No separate setup experience was recorded.
