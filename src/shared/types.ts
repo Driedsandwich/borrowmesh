@@ -15,7 +15,8 @@ export interface Bundle {
   returnDeadline: string; requiresConsent: boolean; consentReason?: string; score: number[]; request: KitRequest;
 }
 export interface Hold { id: string; bundle: Bundle; borrowerId: string; createdAt: string; expiresAt: string; status: 'active' | 'expired' | 'committed' | 'cancelled' }
-export interface Booking { id: string; borrowerId: string; bundle: Bundle; status: 'booked' | 'cancelled'; createdAt: string; issues: { itemId: string; kind: 'broken' | 'late'; replacementId?: string }[] }
+export interface CheckInIssue { itemId: string; kind: 'missing' | 'damaged' }
+export interface Booking { id: string; borrowerId: string; bundle: Bundle; status: 'booked' | 'cancelled' | 'returned'; createdAt: string; issues: { itemId: string; kind: 'broken' | 'late' | 'missing' | 'damaged'; replacementId?: string }[] }
 export interface Loan { id: string; borrowerId: string; itemIds: string[]; start: string; end: string }
 export interface BenchReservation extends TimeRange { id: string; borrowerId: string }
 export interface WaitlistEntry { id: string; borrowerId: string; request: KitRequest; acceptsSubstitutions: boolean; status: 'waiting' | 'served'; bookingId?: string }
@@ -32,5 +33,6 @@ export interface HoldResult extends DomainResult { hold?: Hold; conflicts?: stri
 export interface CommitResult extends DomainResult { booking?: Booking; needsConsent?: boolean; consentReason?: string; conflicts?: string[]; alternatives?: Bundle[] }
 export interface ReleaseResult extends DomainResult { released?: Booking; waitlistServed: Booking[] }
 export interface IssueResult extends DomainResult { booking?: Booking; replacement?: CatalogItem; affectedItemId?: string; keptItemIds?: string[] }
+export interface CheckInResult extends DomainResult { booking?: Booking; waitlistServed: Booking[] }
 export interface CheckInRequest { bookingId: string; returnedItemIds: string[]; damagedItemIds?: string[]; missingItemIds?: string[] }
 export interface Clock { now(): number }
