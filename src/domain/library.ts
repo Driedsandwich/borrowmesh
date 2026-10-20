@@ -216,6 +216,15 @@ export function check_in_bundle(input: LibraryState, request: { bookingId: strin
   }
 
   const issues = request.issues ?? [];
+  const bookedIds = new Set(booking.bundle.itemIds);
+  const issueIds = issues.map(i => i.itemId);
+  const foreignIds = [...request.returnedItemIds, ...issueIds].filter(id => !bookedIds.has(id));
+  const doubledIds = request.returnedItemIds.filter(id => issueIds.includes(id));
+  if (foreignIds.length || doubledIds.length) {
+    const nameOf = (id: string) => { const item = input.catalog.find(value => value.id === id); return item ? itemNameInSentence(item.name) : id; };
+    const reasons = [foreignIds.length ? `not part of this booking: ${[...new Set(foreignIds)].map(nameOf).join(', ')}` : '', doubledIds.length ? `listed as both returned and an issue: ${doubledIds.map(nameOf).join(', ')}` : ''].filter(Boolean);
+    return { state: clone(input), ok: false, message: `Nothing was checked in. These items are ${reasons.join('; ')}.`, waitlistServed: [] };
+  }
 
   // 3. Check all items are accounted for (returned or in issues)
   const accountedIds = new Set([...request.returnedItemIds, ...issues.map(i => i.itemId)]);
@@ -236,16 +245,15 @@ export function check_in_bundle(input: LibraryState, request: { bookingId: strin
 
   // 5 & 6. Process issues: damaged → 'broken', missing → unchanged (already unavailable)
   for (const issue of issues) {
-    if (issue.kind === 'damaged') {
-      const catalogItem = state.catalog.find(value => value.id === issue.itemId);
-      if (catalogItem) catalogItem.condition = 'broken';
-    }
-    // 'missing': leave condition unchanged, just flag it in booking.issues below
+    const catalogItem = state.catalog.find(value => value.id === issue.itemId);
+    // Damaged items go out for repair; missing items stay unavailable until found.
+    if (catalogItem) catalogItem.condition = issue.kind === 'damaged' ? 'broken' : 'missing';
   }
 
   // 7. Free bench time if returning before bench end time
   const benchEndStamp = stamp(booking.bundle.bench.date, booking.bundle.bench.end);
-  if (state.simulatedNow < benchEndStamp) {
+  const benchFreed = state.simulatedNow < benchEndStamp;
+  if (benchFreed) {
     state.benchReservations = state.benchReservations.filter(slot =>
       !(slot.date === booking.bundle.bench.date &&
         slot.start === booking.bundle.bench.start &&
@@ -297,7 +305,7 @@ export function check_in_bundle(input: LibraryState, request: { bookingId: strin
   return {
     state,
     ok: true,
-    message: `Checked in: ${itemsPart}. The bench slot has been freed.${waitlistMessage}`,
+    message: `Checked in: ${itemsPart}.${benchFreed ? ' The bench slot has been freed.' : ''}${waitlistMessage}`,
     booking: state.bookings.find(value => value.id === request.bookingId),
     waitlistServed,
   };

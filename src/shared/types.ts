@@ -1,7 +1,7 @@
 export type ItemCategory = 'cutting' | 'drilling' | 'accessories' | 'holding' | 'safety';
 export interface CatalogItem {
   id: string; name: string; category: ItemCategory; quantity: number;
-  condition: 'ready' | 'broken' | 'late';
+  condition: 'ready' | 'broken' | 'late' | 'missing';
   attributes: { role: string; platform?: string; power?: 'corded' | 'battery' | 'manual'; bitSizes?: number[]; sizeMm?: number; blade?: string; requires?: string[]; outletRequired?: boolean };
 }
 export interface Borrower { id: string; name: string }

@@ -194,7 +194,7 @@ describe('atomic JSON persistence', () => {
 });
 
 describe('reserved check-in workflow', () => {
-  it('leaves a typed throwing stub outside the MCP surface', () => {
+  it('rejects a check-in for an unknown booking', () => {
     const result = check_in_bundle(createInitialState(), { bookingId: 'planned', returnedItemIds: [] });
     expect(result.ok).toBe(false);
     expect(result.waitlistServed).toEqual([]);
@@ -234,9 +234,8 @@ describe('reserved check-in workflow', () => {
     ]));
     // Damaged item is broken (out for repair), not ready
     expect(result.state.catalog.find(item => item.id === damagedId)!.condition).toBe('broken');
-    // Missing item stays at its prior condition (unchanged — not forcibly made unavailable)
-    const missingConditionBefore = committed.state.catalog.find(item => item.id === missingId)!.condition;
-    expect(result.state.catalog.find(item => item.id === missingId)!.condition).toBe(missingConditionBefore);
+    // A missing item stays unavailable until it is found.
+    expect(result.state.catalog.find(item => item.id === missingId)!.condition).toBe('missing');
     // Returned items are available again
     for (const id of returnedIds) {
       expect(result.state.catalog.find(item => item.id === id)!.condition).toBe('ready');
@@ -299,5 +298,19 @@ describe('reserved check-in workflow', () => {
       expect(result.message).toContain(expectedName);
     }
     expect(result.state.bookings).toEqual(committed.state.bookings);
+  });
+  it('rejects items that are not part of the booking or are listed twice, changing nothing', () => {
+    const committed = bookedKit();
+    const booking = committed.booking!;
+    const foreign = committed.state.catalog.find(item => !booking.bundle.itemIds.includes(item.id))!;
+    const extra = check_in_bundle(committed.state, { bookingId: booking.id, returnedItemIds: [...booking.bundle.itemIds, foreign.id] });
+    expect(extra.ok).toBe(false);
+    expect(extra.message).toContain('not part of this booking');
+    expect(extra.state).toEqual(committed.state);
+    const [first, ...rest] = booking.bundle.itemIds;
+    const doubled = check_in_bundle(committed.state, { bookingId: booking.id, returnedItemIds: [first, ...rest], issues: [{ itemId: first, kind: 'damaged' }] });
+    expect(doubled.ok).toBe(false);
+    expect(doubled.message).toContain('listed as both returned and an issue');
+    expect(doubled.state).toEqual(committed.state);
   });
 });
