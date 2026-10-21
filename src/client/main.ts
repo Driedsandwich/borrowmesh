@@ -54,6 +54,9 @@ let changedItemId: string | undefined;
 let simulatedClockReceivedAt = Date.now();
 const traffic: ProtocolEntry[] = [];
 
+// A pair already names its two pieces, so ×2 would read as two pairs.
+const showQuantity = (item: { name: string; quantity: number }) => item.quantity > 1 && !(item.quantity === 2 && /^Pair of /.test(item.name));
+
 function say(message: string): void {
   if (!el<HTMLInputElement>('speak').checked || !('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
@@ -154,7 +157,7 @@ function renderBoard(): void {
       const substitute = item.id === changedItemId || bundle.substitutions.some((change) => change.replacement === item.id || change.replacement === item.name);
       const unavailable = item.condition !== 'ready';
       const tileStatus = unavailable ? 'out' : status;
-      return `<article class="item-tile ${substitute ? 'is-substitute' : ''} ${unavailable ? 'has-issue' : ''}" data-item-id="${esc(item.id)}" data-status="${tileStatus}"><div class="tile-top">${icon(item)}<div class="tile-badges"><span class="item-status ${tileStatus}">${unavailable ? item.condition : status}</span>${substitute ? '<span class="substitute-label">Substitute</span>' : ''}</div></div><h3>${esc(item.name)}${item.quantity > 1 ? ` <small>×${item.quantity}</small>` : ''}</h3><p>${unavailable ? 'Needs a compatible replacement' : `Return ${esc(deadline(bundle.returnDeadline))}`}</p></article>`;
+      return `<article class="item-tile ${substitute ? 'is-substitute' : ''} ${unavailable ? 'has-issue' : ''}" data-item-id="${esc(item.id)}" data-status="${tileStatus}"><div class="tile-top">${icon(item)}<div class="tile-badges"><span class="item-status ${tileStatus}">${unavailable ? item.condition : status}</span>${substitute ? '<span class="substitute-label">Substitute</span>' : ''}</div></div><h3>${esc(item.name)}${showQuantity(item) ? ` <small>×${item.quantity}</small>` : ''}</h3><p>${unavailable ? 'Needs a compatible replacement' : `Return ${esc(deadline(bundle.returnDeadline))}`}</p></article>`;
     }).join('');
   } else {
     el('kit-board').className = 'kit-board';
@@ -192,7 +195,7 @@ function showDetails(index: number): void {
   const bundle = bundles[index];
   if (!bundle) return;
   const itemName = (id: string) => library?.catalog.find((item) => item.id === id)?.name || id;
-  el('kit-detail-content').innerHTML = `<p class="eyebrow">COMPLETE KIT / OPTION 0${index + 1}</p><h2 id="kit-detail-title">${esc(bundle.name)}</h2><h3>Every item, together</h3><ul class="detail-items">${bundle.items.map((item) => `<li>${esc(item.name)}${item.quantity > 1 ? ` <span>×${item.quantity}</span>` : ''}</li>`).join('')}</ul><h3>Compatible substitutions</h3>${bundle.substitutions.length ? `<ul class="detail-substitutions">${bundle.substitutions.map((substitution) => `<li><strong>${esc(itemName(substitution.original))} → ${esc(itemName(substitution.replacement))}</strong><p>${esc(substitution.reason)}</p></li>`).join('')}</ul>` : '<p class="detail-copy">All requirements met without substitutions.</p>'}<div class="detail-bench"><p><strong>${esc(bundle.bench.name)}</strong> · ${esc(bundle.bench.date)} · ${esc(time(bundle.bench.start))}–${esc(time(bundle.bench.end))}</p><p>Return every item by ${esc(deadline(bundle.returnDeadline))} (simulated library time).</p></div>`;
+  el('kit-detail-content').innerHTML = `<p class="eyebrow">COMPLETE KIT / OPTION 0${index + 1}</p><h2 id="kit-detail-title">${esc(bundle.name)}</h2><h3>Every item, together</h3><ul class="detail-items">${bundle.items.map((item) => `<li>${esc(item.name)}${showQuantity(item) ? ` <span>×${item.quantity}</span>` : ''}</li>`).join('')}</ul><h3>Compatible substitutions</h3>${bundle.substitutions.length ? `<ul class="detail-substitutions">${bundle.substitutions.map((substitution) => `<li><strong>${esc(itemName(substitution.original))} → ${esc(itemName(substitution.replacement))}</strong><p>${esc(substitution.reason)}</p></li>`).join('')}</ul>` : '<p class="detail-copy">All requirements met without substitutions.</p>'}<div class="detail-bench"><p><strong>${esc(bundle.bench.name)}</strong> · ${esc(bundle.bench.date)} · ${esc(time(bundle.bench.start))}–${esc(time(bundle.bench.end))}</p><p>Return every item by ${esc(deadline(bundle.returnDeadline))} (simulated library time).</p></div>`;
   el<HTMLDialogElement>('kit-detail').showModal();
   el('close-kit-detail').focus();
 }
