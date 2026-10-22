@@ -8,7 +8,7 @@
 | Mini challenges | AWS Builder — Kiro Crew used as a development tool during the hackathon (how it was used: Product feedback › Kiro Crew) |
 | Built with | TypeScript; Node.js; npm; MCP TypeScript SDK 1.32.1; MCP specification 2025-11-25; Streamable HTTP; Express; Zod; Vite; Vitest; happy-dom; Playwright; Chromium; tsx; concurrently; ffmpeg; ffprobe; Kokoro (kokoro-onnx); Python; Kiro Crew; Kiro CLI; HTML; CSS |
 | Try it out | https://github.com/Driedsandwich/borrowmesh |
-| Video demo link | TODO_VIDEO_URL |
+| Video demo link | https://www.youtube.com/watch?v=MEncWbqHXRM |
 | Team / development disclosure | Solo entrant; built during the submission period with AI coding agents. One agent implemented written specifications; a second reviewed the code, ran the browser walkthrough, recorded the video, and verified results. A Kiro Crew task-runner run implemented the check-in domain function, which was then reviewed and corrected in a follow-up commit. |
 | Existing-project explanation | New project, built on October 20, 2026 (JST), during the hackathon submission period. |
 

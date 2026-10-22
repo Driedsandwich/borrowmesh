@@ -95,7 +95,7 @@ A remote or cloud assistant generally cannot reach your machine's loopback addre
 
 ## Prepare a demo video
 
-The completed demo is **157.2 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](TODO_VIDEO_URL).
+The completed demo is **157.2 seconds**, recorded from real browser interactions at **1280×800** and encoded as **H.264/AAC** in `video/demo.mp4`. Watch: [Demo video](https://www.youtube.com/watch?v=MEncWbqHXRM).
 
 The verified browser walkthrough completed requirements, three kit cards, hold, consent, booking, reload, clamp replacement, cancellation with waitlist service, and protocol inspection, with zero browser console errors. A separate fresh-copy installation passed the build, 92 tests, and demo reset. The following commands check recording preparation; they do not repeat that browser verification:
 
